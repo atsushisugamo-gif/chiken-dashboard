@@ -890,7 +890,7 @@ for _y, _mn in _months_set:
             _cls = ('has-trials ' + _lvl).strip() + _today_cls
             _dup = '<span class="cal-dup" title="複数サイト重複あり"></span>' if _has_dup else ''
             _ymid = _dt.strftime('%Y-%m')
-            _cells.append(f'<div class="tl-cal-day {_cls}" title="{_y}/{_mn}/{_day} {_n}件" onclick="document.getElementById(\'month-{_ymid}\')?.scrollIntoView({{behavior:\'smooth\',block:\'center\'}})"><span class="cal-num">{_day}</span><span class="cal-count">{_n}件</span>{_dup}</div>')
+            _cells.append(f'<div class="tl-cal-day {_cls}" title="{_y}/{_mn}/{_day} {_n}件" onclick="calCellClick(\'{_ymid}\',\'{_dt.isoformat()}\')"><span class="cal-num">{_day}</span><span class="cal-count">{_n}件</span>{_dup}</div>')
         else:
             _color = ' style="color:#fca5a5;"' if _is_sun else (' style="color:#7c8db5;"' if _is_sat else '')
             _cells.append(f'<div class="tl-cal-day{_today_cls}"{_color}><span class="cal-num">{_day}</span></div>')
@@ -966,7 +966,9 @@ def build_row(e, date_html, date_class, hidden=False):
     inpatient_cell = build_inpatient_cell(e)
     outpatient_cell = build_outpatient_cell(e)
 
-    return f'''        <tr{row_class} data-ttype="{ttype}">
+    _row_date = e['start_date'].strftime('%Y-%m-%d') if e.get('start_date') else ''
+    _row_date_attr = f' data-row-date="{_row_date}"' if _row_date else ''
+    return f'''        <tr{row_class} data-ttype="{ttype}"{_row_date_attr}>
           <td class="{date_class}">{date_html}</td>
           <td><a href="{esc(e['url'])}" target="_blank">{title_esc}</a>{tt_badges}{status_html}</td>
           <td>{sites_html}</td>
@@ -1168,6 +1170,39 @@ TTAB_JS = '''
 </script>
 '''
 dashboard = dashboard.replace('</script>\n</body>', '</script>\n' + TTAB_JS + '\n</body>')
+
+CAL_JS = '''
+<script>
+(function(){
+  window.calCellClick = function(ymid, dateStr) {
+    const monthRow = document.getElementById('month-' + ymid);
+    if (monthRow && monthRow.classList.contains('collapsed')) {
+      monthRow.click();
+    }
+    setTimeout(function(){
+      const target = document.querySelector('tr[data-row-date="' + dateStr + '"]');
+      if (target) {
+        target.scrollIntoView({behavior: 'smooth', block: 'center'});
+        // Highlight all rows with same date
+        const all = document.querySelectorAll('tr[data-row-date="' + dateStr + '"]');
+        all.forEach(function(r){
+          r.classList.add('flash-highlight');
+          setTimeout(function(){ r.classList.remove('flash-highlight'); }, 2400);
+        });
+      } else if (monthRow) {
+        monthRow.scrollIntoView({behavior: 'smooth', block: 'center'});
+      }
+    }, 100);
+  };
+  // Inject highlight CSS
+  const s = document.createElement('style');
+  s.textContent = '@keyframes flashHL{0%,100%{background:rgba(201,165,88,0.04);}25%,75%{background:rgba(201,165,88,0.42);}50%{background:rgba(241,228,198,0.35);}} .flash-highlight td{animation:flashHL 1.2s ease-in-out 2;}';
+  document.head.appendChild(s);
+})();
+</script>
+'''
+dashboard = dashboard.replace('</body>', CAL_JS + '\n</body>')
+
 
 
 print("Added tracking JavaScript")
