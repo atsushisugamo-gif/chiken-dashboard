@@ -1,0 +1,2748 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>治験・モニター統合ダッシュボード</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+  background: linear-gradient(160deg, #0a0e27 0%, #0f1b3d 30%, #141230 60%, #0d0f1a 100%);
+  background-attachment: fixed;
+  color: #e2e8f0;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.header {
+  background: linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(139,92,246,0.12) 50%, rgba(236,72,153,0.08) 100%);
+  backdrop-filter: blur(12px);
+  padding: 20px 32px;
+  border-bottom: 1px solid rgba(139,92,246,0.25);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.header h1 {
+  font-size: 1.3rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header .meta { color: #7c8db5; font-size: 0.8rem; }
+.container { max-width: 1440px; margin: 0 auto; padding: 20px; }
+
+/* KPI Cards */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi {
+  background: linear-gradient(145deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9));
+  border-radius: 12px; padding: 16px;
+  border: 1px solid rgba(100,116,139,0.2);
+  backdrop-filter: blur(8px);
+  transition: transform 0.2s, border-color 0.2s;
+}
+.kpi:hover { transform: translateY(-2px); border-color: rgba(139,92,246,0.4); }
+.kpi .label { font-size: 0.72rem; color: #7c8db5; text-transform: uppercase; letter-spacing: 0.5px; }
+.kpi .value { font-size: 1.7rem; font-weight: 700; color: #60a5fa; margin-top: 2px; }
+.kpi .value.green { color: #4ade80; }
+.kpi .value.amber { background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.kpi .value.purple { background: linear-gradient(135deg, #a78bfa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.kpi .sub { font-size: 0.72rem; color: #7c8db5; margin-top: 2px; }
+
+/* Section */
+.section {
+  background: linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.8));
+  border-radius: 12px; padding: 18px;
+  border: 1px solid rgba(100,116,139,0.2);
+  margin-bottom: 16px;
+  backdrop-filter: blur(8px);
+}
+.section h3 { font-size: 0.95rem; color: #f1f5f9; margin-bottom: 12px; border-bottom: 1px solid rgba(100,116,139,0.2); padding-bottom: 8px; }
+
+/* Charts */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.chart-card {
+  background: linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.8));
+  border-radius: 12px; padding: 16px;
+  border: 1px solid rgba(100,116,139,0.2);
+  backdrop-filter: blur(8px);
+}
+.chart-card h3 { font-size: 0.9rem; color: #f1f5f9; margin-bottom: 10px; }
+canvas { max-height: 260px; }
+
+/* Stats Table */
+.stats-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.stats-table th { background: linear-gradient(135deg, rgba(51,65,85,0.8), rgba(30,41,59,0.8)); color: #94a3b8; padding: 8px 12px; text-align: center; font-weight: 600; }
+.stats-table td { padding: 8px 12px; border-bottom: 1px solid rgba(41,53,72,0.5); text-align: center; }
+.stats-table tr:hover { background: rgba(59,130,246,0.08); }
+
+/* Filters */
+.filters {
+  background: linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.8));
+  border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;
+  border: 1px solid rgba(100,116,139,0.2);
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  backdrop-filter: blur(8px);
+}
+.filters label { color: #7c8db5; font-size: 0.8rem; }
+.filters select, .filters input { background: rgba(15,23,42,0.8); color: #e2e8f0; border: 1px solid rgba(71,85,105,0.5); border-radius: 6px; padding: 6px 10px; font-size: 0.82rem; }
+.filters input { width: 220px; }
+.result-count { margin-left: auto; color: #7c8db5; font-size: 0.8rem; }
+
+/* Table */
+.table-wrap {
+  background: linear-gradient(145deg, rgba(30,41,59,0.6), rgba(15,23,42,0.7));
+  border-radius: 12px; overflow: auto;
+  border: 1px solid rgba(100,116,139,0.2); max-height: 70vh;
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+thead th {
+  background: linear-gradient(135deg, rgba(51,65,85,0.9), rgba(30,41,59,0.9));
+  color: #94a3b8; padding: 10px 12px; text-align: left; font-weight: 600;
+  position: sticky; top: 0; cursor: default; white-space: nowrap; z-index: 1;
+}
+#mainTable thead th { cursor: pointer; }
+#mainTable thead th:hover { color: #e2e8f0; }
+#mainTable thead th.sorted-asc::after { content: ' ▲'; font-size: 0.7rem; }
+#mainTable thead th.sorted-desc::after { content: ' ▼'; font-size: 0.7rem; }
+tbody td { padding: 8px 12px; border-bottom: 1px solid rgba(30,41,59,0.5); }
+tbody tr { background: transparent; transition: background 0.2s; }
+tbody tr:hover { background: rgba(59,130,246,0.08); }
+a { color: #60a5fa; text-decoration: none; }
+a:hover { text-decoration: underline; color: #93c5fd; }
+.badge { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 0.7rem; font-weight: 500; }
+.badge-area { background: linear-gradient(135deg, rgba(30,58,95,0.8), rgba(30,64,115,0.6)); color: #7dd3fc; }
+.badge-site { background: linear-gradient(135deg, rgba(28,56,41,0.8), rgba(20,70,45,0.6)); color: #86efac; }
+.badge-dup { background: linear-gradient(135deg, rgba(74,29,94,0.8), rgba(88,28,135,0.6)); color: #d8b4fe; margin-left: 6px; }
+.badge-new {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: #fff; font-weight: 700; font-size: 0.65rem;
+  padding: 2px 8px; border-radius: 4px; margin-left: 6px;
+  animation: pulse-new 2s ease-in-out infinite;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.badge-updated {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: #fff; font-weight: 700; font-size: 0.65rem;
+  padding: 2px 8px; border-radius: 4px; margin-left: 6px;
+  animation: pulse-upd 2.5s ease-in-out infinite;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+@keyframes pulse-new {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+  50% { box-shadow: 0 0 8px 3px rgba(239,68,68,0.3); }
+}
+@keyframes pulse-upd {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.5); }
+  50% { box-shadow: 0 0 8px 3px rgba(139,92,246,0.3); }
+}
+tr.row-new { border-left: 3px solid #ef4444; }
+tr.row-updated { border-left: 3px solid #8b5cf6; }
+
+.comp { font-weight: 600; color: #fbbf24; white-space: nowrap; }
+.ppn { font-weight: 600; color: #34d399; white-space: nowrap; }
+.nights { color: #94a3b8; white-space: nowrap; }
+.error-box { background: rgba(69,26,3,0.8); border: 1px solid #78350f; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; color: #fbbf24; font-size: 0.82rem; }
+.hidden { display: none; }
+
+/* Timeline Calendar */
+.timeline-hero {
+  background: linear-gradient(135deg, rgba(30,58,95,0.6) 0%, rgba(88,28,135,0.25) 40%, rgba(236,72,153,0.1) 80%, rgba(15,23,42,0.7) 100%);
+  border-radius: 14px;
+  padding: 24px;
+  border: 1px solid rgba(139,92,246,0.3);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+.timeline-hero::before {
+  content: '';
+  position: absolute;
+  top: -30%; right: -10%;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.timeline-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -20%; left: -5%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.timeline-hero h3 {
+  font-size: 1.15rem;
+  margin-bottom: 16px;
+  border-bottom: none; padding-bottom: 0;
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.tl-stats {
+  display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
+}
+.tl-stat {
+  background: rgba(15,23,42,0.5);
+  border-radius: 8px; padding: 8px 14px; font-size: 0.82rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(4px);
+}
+.tl-stat .num { font-weight: 700; }
+.tl-stat .num.blue { color: #60a5fa; }
+.tl-stat .num.gray { color: #94a3b8; }
+.tl-stat .num.purple { color: #c084fc; }
+.tl-stat .num.red { color: #f87171; }
+.tl-stat .num.orange { color: #fb923c; }
+
+.tl-bar-wrap {
+  display: flex; gap: 4px; margin-bottom: 18px;
+  align-items: flex-end; height: 56px; padding: 0 2px;
+}
+.tl-bar-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  cursor: pointer; transition: transform 0.15s;
+}
+.tl-bar-item:hover { transform: translateY(-3px); }
+.tl-bar-col {
+  width: 100%; min-width: 28px;
+  border-radius: 6px 6px 0 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.15);
+}
+.tl-bar-item:hover .tl-bar-col { opacity: 0.85; }
+.tl-bar-label { font-size: 0.7rem; color: #94a3b8; white-space: nowrap; }
+.tl-bar-count { font-size: 0.72rem; font-weight: 700; color: #e2e8f0; }
+
+.month-header {
+  cursor: pointer; transition: background 0.15s; user-select: none;
+}
+.month-header:hover { background: rgba(59,130,246,0.12) !important; }
+.month-header td { padding: 12px 16px !important; }
+.month-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: #fff; font-weight: 700; font-size: 0.9rem;
+  padding: 4px 14px; border-radius: 8px; margin-right: 10px;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+}
+.month-badge.past {
+  background: linear-gradient(135deg, #475569, #64748b);
+  box-shadow: none;
+}
+.month-count { font-weight: 400; color: #94a3b8; font-size: 0.8rem; }
+.month-toggle { float: right; color: #7c8db5; font-size: 0.8rem; transition: transform 0.2s; }
+.month-header.collapsed .month-toggle { transform: rotate(-90deg); }
+.date-cell { white-space: nowrap; font-weight: 700; font-size: 0.88rem; text-align: center; }
+.date-cell.future { color: #fbbf24; }
+.date-cell.past { color: #64748b; }
+.date-cell.soon { color: #f87171; text-shadow: 0 0 6px rgba(248,113,113,0.4); }
+.date-cell.undated { color: #475569; font-weight: 400; font-style: italic; }
+
+/* Legend for new/updated */
+.status-legend {
+  display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;
+}
+.status-legend-item {
+  display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #94a3b8;
+}
+.legend-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.legend-dot.new { background: linear-gradient(135deg, #ef4444, #f97316); }
+.legend-dot.updated { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+.legend-dot.dup { background: linear-gradient(135deg, #a855f7, #d946ef); }
+
+
+/* Click tracking */
+.click-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 22px; padding: 0 6px;
+  border-radius: 12px; font-size: 0.72rem; font-weight: 700; text-align: center;
+}
+.click-count.zero { background: rgba(71,85,105,0.3); color: #64748b; }
+.click-count.low { background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(99,102,241,0.2)); color: #93c5fd; }
+.click-count.mid { background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(236,72,153,0.2)); color: #d8b4fe; }
+.click-count.high { background: linear-gradient(135deg, rgba(239,68,68,0.3), rgba(249,115,22,0.2)); color: #fca5a5; animation: pulse-hot 2s ease-in-out infinite; }
+@keyframes pulse-hot { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); } 50% { box-shadow: 0 0 6px 2px rgba(239,68,68,0.15); } }
+a.unvisited { position: relative; }
+a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; margin-right: 5px; vertical-align: middle; box-shadow: 0 0 4px rgba(59,130,246,0.5); }
+.tl-click-col { text-align: center; width: 60px; }
+
+@media (max-width: 768px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .filters { flex-direction: column; }
+  .filters input { width: 100%; }
+  .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+  .tl-stats { gap: 6px; }
+  .tl-stat { padding: 6px 10px; font-size: 0.75rem; }
+  .tl-bar-wrap { height: 40px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>治験入院案件 統合ダッシュボード</h1>
+  <div class="meta">最終更新: 2026-04-23 17:28:12｜ 全121件 ｜ 10サイト統合</div>
+</div>
+
+<div class="container">
+  
+
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <div class="kpi"><div class="label">総案件数</div><div class="value">121</div></div>
+    <div class="kpi"><div class="label">対象サイト</div><div class="value green">10</div></div>
+    <div class="kpi"><div class="label">平均負担軽減費</div><div class="value orange">213,802円</div></div>
+    <div class="kpi"><div class="label">最高負担軽減費</div><div class="value orange">840,000円</div></div>
+    <div class="kpi"><div class="label">定員合計 (判明分)</div><div class="value purple">0名</div></div>
+    <div class="kpi"><div class="label">対象地域数</div><div class="value purple">6</div></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3>地域別 案件数</h3>
+      <canvas id="areaChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>負担軽減費 分布</h3>
+      <canvas id="compChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>カテゴリ別 案件数</h3>
+      <canvas id="catChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>サイト別 案件数</h3>
+      <canvas id="siteChart"></canvas>
+    </div>
+  </div>
+
+
+
+  <!-- 入院日カレンダー v3 -->
+  <div class="timeline-hero" id="timelineSection">
+    <h3>📅 入院開始日カレンダー</h3>
+    <div class="tl-stats">
+      <div class="tl-stat">
+        <span style="color:#7c8db5;">日付判明</span> <span class="num blue">61件</span>
+      </div>
+      <div class="tl-stat">
+        <span style="color:#7c8db5;">日付未定</span> <span class="num gray">60件</span>
+      </div>
+      <div class="tl-stat">
+        <span style="color:#7c8db5;">複数サイト重複</span> <span class="num purple">5件</span>
+      </div>
+      
+      
+    </div>
+    <div class="tl-bar-wrap"><div class="tl-bar-item" onclick="document.getElementById('month-0')?.scrollIntoView({behavior:'smooth',block:'center'})">
+      <div class="tl-bar-count">6</div>
+      <div class="tl-bar-col" style="height:25%;background:linear-gradient(180deg, #60a5fa, #3b82f6);"></div>
+      <div class="tl-bar-label">4月</div>
+    </div><div class="tl-bar-item" onclick="document.getElementById('month-1')?.scrollIntoView({behavior:'smooth',block:'center'})">
+      <div class="tl-bar-count">44</div>
+      <div class="tl-bar-col" style="height:100%;background:linear-gradient(180deg, #818cf8, #6366f1);"></div>
+      <div class="tl-bar-label">5月</div>
+    </div><div class="tl-bar-item" onclick="document.getElementById('month-2')?.scrollIntoView({behavior:'smooth',block:'center'})">
+      <div class="tl-bar-count">10</div>
+      <div class="tl-bar-col" style="height:25%;background:linear-gradient(180deg, #a78bfa, #8b5cf6);"></div>
+      <div class="tl-bar-label">6月</div>
+    </div><div class="tl-bar-item" onclick="document.getElementById('month-3')?.scrollIntoView({behavior:'smooth',block:'center'})">
+      <div class="tl-bar-count">1</div>
+      <div class="tl-bar-col" style="height:25%;background:linear-gradient(180deg, #c084fc, #a855f7);"></div>
+      <div class="tl-bar-label">7月</div>
+    </div><div class="tl-bar-item" onclick="document.getElementById('month-undated')?.scrollIntoView({behavior:'smooth',block:'center'})">
+      <div class="tl-bar-count">60</div>
+      <div class="tl-bar-col" style="height:136%;background:linear-gradient(180deg, #64748b, #475569);"></div>
+      <div class="tl-bar-label">未定</div>
+    </div></div>
+    <div class="status-legend">
+      <div class="status-legend-item"><div class="legend-dot dup"></div> 複数サイト重複</div>
+    </div>
+    <div class="table-wrap" style="max-height:55vh;border-radius:10px;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:90px;text-align:center;">入院開始日</th>
+            <th>案件名</th>
+            <th>掲載サイト</th>
+            <th>地域</th>
+            <th>負担軽減費</th>
+            <th>泊数</th>
+            <th>1泊単価</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr class="month-header collapsed" id="month-0" style="background:rgba(26,39,68,0.8);" onclick="this.classList.toggle('collapsed');let s=this.nextElementSibling;while(s&&!s.classList.contains('month-header')){s.classList.toggle('hidden');s=s.nextElementSibling;}">
+          <td colspan="7"><span class="month-badge past">2026年4月</span><span class="month-count">6件</span><span class="month-toggle">▼</span></td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell past">4/6(月)</td>
+          <td><a href="https://new-ing.jp/recruited/26018" target="_blank">No-26018 2026.04.06 健康な65～79歳の方にご協力いただく15泊×1回＋来院6回の治験 治験 対象者 65～79歳の日本人 男性 地域 東京</a></td>
+          <td><span class="badge badge-site">ニューイング</span> <span class="badge badge-site">治験ジャパン</span> <span class="badge badge-dup">2サイト重複</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell past">4/20(月)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36762.html" target="_blank">東京都 2泊×2回+電話確認5回 4/20(月)or4/26(日)or5/2(土)or5/8(金)から [非喫煙者対象]</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥104,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥26,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell past">4/20(月)</td>
+          <td><a href="https://www.chikenweb.jp/chiken_detail.php?id=5857" target="_blank">●【大阪】2026年4月20日開始 健康な男性対象の9泊10日の入院+通院6回宿泊モニター</a></td>
+          <td><span class="badge badge-site">治験ウェブ</span></td>
+          <td><span class="badge badge-area">大阪府</span></td>
+          <td class="comp">¥233,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥25,889</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell past">4/24(金)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36844.html" target="_blank">福岡 7泊×2回 4/24(金)	or	5/10(日)から</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥306,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥21,857</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell past">4/26(日)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003082" target="_blank">【関東/東京/お得治験】【短期治験】【18歳～45歳】4月26日(日)～治験開始 2泊×2回+メール連絡5回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥127,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥31,750</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell past">4/29(水)</td>
+          <td><a href="https://chiken-net.site/products/detail/1000688" target="_blank">【九州/福岡/新着】【短期治験】【非喫煙者限定】【18～45歳】4月29日(水) ～治験開始 4泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥91,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥22,750</td>
+        </tr>
+        <tr class="month-header" id="month-1" style="background:rgba(26,39,68,0.8);" onclick="this.classList.toggle('collapsed');let s=this.nextElementSibling;while(s&&!s.classList.contains('month-header')){s.classList.toggle('hidden');s=s.nextElementSibling;}">
+          <td colspan="7"><span class="month-badge">2026年5月</span><span class="month-count">44件</span><span class="month-toggle">▼</span></td>
+        </tr>
+        <tr>
+          <td class="date-cell past">5/1(金)</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1112" target="_blank">治験コード：N021482-04 【九州/男性】5月1日(金)3泊×2回＋通院1回(18歳～49歳) 245,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">熊本県</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥48,500</td>
+        </tr>
+        <tr>
+          <td class="date-cell past">5/1(金)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003214" target="_blank">【九州/熊本/お得治験】【四国地方・関西地方・中部地方の方も参加可】【ジェネリック治験】【熊本観光も可】5月1日(金) ～治験開始 3泊×2回+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">熊本県</span></td>
+          <td class="comp">¥245,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥40,833</td>
+        </tr>
+        <tr>
+          <td class="date-cell past">5/2(土)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003144" target="_blank">【関東/東京/お得治験】【短期治験】【18歳～45歳】5月2日(土)～治験開始 2泊×2回+メール連絡5回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥127,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥31,750</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/4(月)</td>
+          <td><a href="https://www.chikenweb.jp/chiken_detail.php?id=5884" target="_blank">【大阪】2026年5月4日開始　健康な男性対象の4泊5日×4回宿泊モニター／大阪の治験情報を探すなら インクロム治験Web</a></td>
+          <td><span class="badge badge-site">治験ウェブ</span></td>
+          <td><span class="badge badge-area">大阪府</span></td>
+          <td class="comp">¥312,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥78,000</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/4(月)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003102" target="_blank">【九州/熊本/お得治験】【短期治験】【ジェネリック治験】【喫煙者可】5月4日(月)～治験開始 3泊×2回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">熊本県</span></td>
+          <td class="comp">¥184,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥30,667</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/6(水)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003181" target="_blank">【関東/東京/新着】【短期入院治験】【18歳～45歳】5月6日(水)～治験開始 4泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥114,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥28,500</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/6(水)</td>
+          <td><a href="https://chiken-net.site/products/detail/1002642" target="_blank">【九州/福岡/新着】【喫煙者可】【18～55歳】【BMI基準緩め】5月6日(水) ～治験開始 3泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥72,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥24,000</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/8(金)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36935.html" target="_blank">福岡 3泊+通院1回+3泊+通院2回 5/8(金)から</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥229,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥38,166</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/8(金)</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1109" target="_blank">治験コード：H021613-01 【九州/男性】5月8日(金)～3泊+通院1回+3泊+通院2回(18歳～40歳) 229,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥48,500</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/8(金)</td>
+          <td><a href="https://chiken-net.site/products/detail/1002970" target="_blank">【九州/福岡/新着】【ジェネリック治験】【喫煙者可】5月8日(金) ～治験開始 3泊×2回＋通院3回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥229,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥38,167</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/8(金)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003077" target="_blank">【関東/東京/お得治験】【短期治験】【18歳～45歳】5月8日(金)～治験開始 2泊×2回+メール連絡5回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥127,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥31,750</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/8(金)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003212" target="_blank">【関東/東京台東区/新着】【飲料食品試験】【20～39歳】【非喫煙者】【男性】事前検査：5月8日(金)から 事前検査1回＋本試験 1泊1回</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span> <span class="badge badge-site">治験ネット</span> <span class="badge badge-dup">2サイト重複</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥25,000</td>
+          <td class="nights">1泊</td>
+          <td class="ppn">¥25,000</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/9(土)</td>
+          <td><a href="https://chiken-net.site/products/detail/1002962" target="_blank">【関東/東京/新着】【喫煙者可】【18歳～44歳】 5月9日(土)～治験開始 8泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥210,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥26,250</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/9(土)</td>
+          <td><a href="https://chiken-net.site/products/detail/1000304" target="_blank">【九州/福岡/新着】【18歳～55歳】【非喫煙者限定】5月9日(土)～治験開始 5泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥115,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥23,000</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/9(土)</td>
+          <td><a href="https://chiken-net.site/products/detail/1000619" target="_blank">【九州/熊本/新着】【超短期治験】【非喫煙者限定】【ジェネリック治験】5月9日(土)～治験開始 2泊×2回+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">熊本県</span></td>
+          <td class="comp">¥103,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥25,750</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/10(日)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36847.html" target="_blank">福岡 8泊+通院1回 5/10(日)or5/17(日)or5/24(日)から[非喫煙者対象]</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥206,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥25,750</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/10(日)</td>
+          <td><a href="https://www.chikenweb.jp/chiken_detail.php?id=5858" target="_blank">【大阪】2026年5月10日開始　健康な男性対象の9泊10日の入院+通院6回宿泊モニター／大阪の治験情報を探すなら インクロム治験Web</a></td>
+          <td><span class="badge badge-site">治験ウェブ</span></td>
+          <td><span class="badge badge-area">大阪府</span></td>
+          <td class="comp">¥233,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥25,888</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/10(日)</td>
+          <td><a href="https://chiken-net.site/products/detail/1001085" target="_blank">【九州/福岡/新着】【中期ジェネリック治験】【喫煙者可】5月10日(日) ～治験開始 7泊×2回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥266,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥19,000</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/10(日)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003067" target="_blank">【九州/福岡/お得治験】【四国地方・関西地方・中部地方の方も参加可】【非喫煙者限定】5月10日(日) ～治験開始 8泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥256,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥32,000</td>
+        </tr>
+        <tr>
+          <td class="date-cell soon">5/11(月)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36655.html" target="_blank">4泊5日+通院2回in奈良[注射薬]※5/11入院スタート</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥110,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥27,500</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/12(火)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36919.html" target="_blank">追加日程登場★港区 15泊+6通院 5/12(火)から[65歳以上限定]※単回皮下注射</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">登場★港区</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/12(火)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36853.html" target="_blank">残りわずか★港区 15泊+6通院 5/12(火)から[65歳以上限定]※単回皮下注射</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">ずか★港区</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/12(火)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36413.html" target="_blank">65歳以上限定☆港区 15泊+6通院 5/12(火)から[非喫煙者対象]※単回皮下注射</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">港区</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/12(火)</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1115" target="_blank">治験コード：H021348-10 【九州/男性】5月12日(火)～14泊＋通院1回(18歳～55歳) 291,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥20,786</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/12(火)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003219" target="_blank">【九州/福岡/全国から参加可能（関東在住者は不可）】【福岡観光OK】【BMI基準緩め】【非喫煙者限定】5月12日(火) ～治験開始 14泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥20,786</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/13(水)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36866.html" target="_blank">東京都 3泊×2回+通院2回 5/13(水)から</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥174,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥29,000</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/13(水)</td>
+          <td><a href="https://www.chikenweb.jp/chiken_detail.php?id=5859" target="_blank">【大阪】2026年5月13日開始　健康な男性対象の9泊10日の入院+通院6回宿泊モニター／大阪の治験情報を探すなら インクロム治験Web</a></td>
+          <td><span class="badge badge-site">治験ウェブ</span></td>
+          <td><span class="badge badge-area">大阪府</span></td>
+          <td class="comp">¥233,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥25,888</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/13(水)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003216" target="_blank">【関東/東京/新着】【短期ジェネリック治験】【19～44歳】【非喫煙者】5月13日(水)～ 治験開始 4泊×2回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥220,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥27,500</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/13(水)</td>
+          <td><a href="https://chiken-net.site/products/detail/1002961" target="_blank">【関東/東京/新着】【喫煙者可】【18歳～44歳】 5月13日(水)～治験開始 8泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥210,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥26,250</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/14(木)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36865.html" target="_blank">東京都 3泊+通院1回 5/14(木)or5/19(火)から</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥106,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/14(木)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003097" target="_blank">【九州/熊本/お得治験】【短期治験】【ジェネリック治験】【喫煙者可】5月14日(木) ～治験開始 3泊×2回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">熊本県</span></td>
+          <td class="comp">¥184,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥30,667</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/14(木)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003108" target="_blank">【関東/東京/新着】【短期入院治験】【喫煙者可】【18歳～49歳】5月14日(木)～治験開始 3泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥109,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥36,333</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/17(日)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003066" target="_blank">【九州/福岡/新着】【四国地方・関西地方・中部地方の方も参加可】【非喫煙者限定】5月17日(日)～治験開始 8泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥206,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥25,750</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/18(月)</td>
+          <td><a href="https://www.chikenweb.jp/chiken_detail.php?id=-1269" target="_blank">【東京】2026年5月18日開始　健康成人を対象としたお薬モニター（6泊7日×2回＋通院4回）／大阪の治験情報を探すなら インクロム治験Web</a></td>
+          <td><span class="badge badge-site">治験ウェブ</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥400,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥66,666</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/18(月)</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1127" target="_blank">【九州/男性】5月18日(月)～5泊+通院1回(18歳～55歳)｜治験バイト募集の治験バンク 高額治験アルバイト・モニター募集｜治験バンク</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥115,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥23,000</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/18(月)</td>
+          <td><a href="https://chiken-net.site/products/detail/1000594" target="_blank">【九州/福岡/新着】【非喫煙者】【18～55歳】5月18日(月) ～治験開始 5泊+4泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥196,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥21,778</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/19(火)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003089" target="_blank">【関東/東京/新着】【短期入院治験】【喫煙者可】【18歳～49歳】5月19日(火)～治験開始 3泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥109,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥36,333</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/20(水)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003211" target="_blank">【関東/東京/新着】【短期入院治験】【18歳～45歳】5月20日(水)～治験開始 4泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥114,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥28,500</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/21(木)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36871.html" target="_blank">短期 2泊×2回 5/21(木)から in 横浜</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥25,000</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/24(日)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36839.html" target="_blank">横浜 2泊×2回 5/24(日)から</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥25,000</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/24(日)</td>
+          <td><a href="https://chiken-net.site/products/detail/1000694" target="_blank">【九州/福岡/新着】【非喫煙者限定】5月24日(日) ～治験開始 8泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥156,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥19,500</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/26(火)</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1117" target="_blank">治験コード：H021348-12 【九州/男性】5月26日(火)～14泊＋通院1回(18歳～55歳) 291,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥20,786</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/31(日)</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1110" target="_blank">治験コード：H021677-01 【九州/男性】5月31日(日)～7泊+通院1回(18歳～45歳) 148,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">7泊</td>
+          <td class="ppn">¥41,571</td>
+        </tr>
+        <tr>
+          <td class="date-cell future">5/31(日)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003194" target="_blank">【九州/福岡/新着】【非喫煙者限定】【45歳まで可】5月31日(日)～治験開始 7泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥148,000</td>
+          <td class="nights">7泊</td>
+          <td class="ppn">¥21,143</td>
+        </tr>
+        <tr class="month-header collapsed" id="month-2" style="background:rgba(26,39,68,0.8);" onclick="this.classList.toggle('collapsed');let s=this.nextElementSibling;while(s&&!s.classList.contains('month-header')){s.classList.toggle('hidden');s=s.nextElementSibling;}">
+          <td colspan="7"><span class="month-badge">2026年6月</span><span class="month-count">10件</span><span class="month-toggle">▼</span></td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell future">6/1(月)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36414.html" target="_blank">港区 16泊+3泊+2泊+13通院 6/1(月)から[非喫煙者対象/血圧高めの方]※反復皮下注射</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">港区</span></td>
+          <td class="comp">¥840,000</td>
+          <td class="nights">21泊</td>
+          <td class="ppn">¥40,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell future">6/3(水)</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1129" target="_blank">【九州/男性】6月3日(水)～4泊×2回(18歳～45歳)｜治験バイト募集の治験バンク 高額治験アルバイト・モニター募集｜治験バンク</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥160,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥20,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell future">6/3(水)</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1111" target="_blank">治験コード：H021677-02 【九州/男性】6月3日(水)～7泊+通院1回(18歳～45歳) 148,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">7泊</td>
+          <td class="ppn">¥41,571</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell future">6/3(水)</td>
+          <td><a href="https://chiken-net.site/products/detail/1000328" target="_blank">【九州/福岡/新着】【非喫煙者限定】【45歳まで可】6月3日(水) ～治験開始 7泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥148,000</td>
+          <td class="nights">7泊</td>
+          <td class="ppn">¥21,143</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell future">6/7(日)</td>
+          <td><a href="https://chiken-net.site/products/detail/1003218" target="_blank">【関東/神奈川横浜市/新着】【短期ジェネリック治験】【20～40歳】【喫煙者可（ただし入院期間中禁煙）】6月7日(日)～ 治験開始 2泊2回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">神奈川県</span></td>
+          <td class="comp">¥103,000</td>
+          <td class="nights">2泊</td>
+          <td class="ppn">¥51,500</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell future">6/8(月)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36926.html" target="_blank">浅草 4泊×2回+2通院  6/8(月)から[非喫煙者対象]</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥250,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥31,250</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell future">6/8(月)</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1128" target="_blank">【九州/男性】6月8日(月)～5泊+通院1回(18歳～55歳)｜治験バイト募集の治験バンク 高額治験アルバイト・モニター募集｜治験バンク</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥115,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥23,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell future">6/8(月)</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1116" target="_blank">治験コード：H021348-11 【九州/男性】6月8日(月)～5泊+通院1回(18歳～55歳) 115,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥58,200</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell future">6/8(月)</td>
+          <td><a href="https://chiken-net.site/products/detail/1002720" target="_blank">【九州/福岡】【BMI基準緩め】【18～55歳】6月8日(月)～治験開始 5泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥115,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥23,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell future">6/18(木)</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1130" target="_blank">【九州/男性】6月18日(木)～4泊×2回(18歳～45歳)｜治験バイト募集の治験バンク 高額治験アルバイト・モニター募集｜治験バンク</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥160,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥20,000</td>
+        </tr>
+        <tr class="month-header collapsed" id="month-3" style="background:rgba(26,39,68,0.8);" onclick="this.classList.toggle('collapsed');let s=this.nextElementSibling;while(s&&!s.classList.contains('month-header')){s.classList.toggle('hidden');s=s.nextElementSibling;}">
+          <td colspan="7"><span class="month-badge">2026年7月</span><span class="month-count">1件</span><span class="month-toggle">▼</span></td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell future">7/22(水)</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36412.html" target="_blank">港区 15泊+6通院 7/22(水)から[非喫煙者対象]※単回皮下注射</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">港区</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="month-header collapsed" id="month-undated" style="background:rgba(26,39,68,0.8);" onclick="this.classList.toggle('collapsed');let s=this.nextElementSibling;while(s&&!s.classList.contains('month-header')){s.classList.toggle('hidden');s=s.nextElementSibling;}">
+          <td colspan="7"><span class="month-badge past">日付未定</span><span class="month-count">60件</span><span class="month-toggle">▼</span></td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001DD6XTYA1" target="_blank">20～55歳の健常男性対象【入院】試験☆8泊×3回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥545,000</td>
+          <td class="nights">24泊</td>
+          <td class="ppn">¥22,708</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/6199" target="_blank">【15泊+来院6回】健康な18～54歳の男性対象</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">東京都港区</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://gogochiken.jp/project/4345" target="_blank">都内実施　入院15泊1回＋通院6回｜治験情報V-NET</a></td>
+          <td><span class="badge badge-site">治験情報V-NET</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/38-21-2799/" target="_blank">20-64歳：非喫煙者対象★ポリフェノール含有飲料★4泊4回入院 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥453,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥113,250</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001Jh3btYAB" target="_blank">18～45歳 日本人健康男性対象【入院・通院】試験☆6泊×2＋通院4回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥410,000</td>
+          <td class="nights">12泊</td>
+          <td class="ppn">¥34,167</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/102-08c-2792/" target="_blank">24-39歳：非喫煙者・長期◆13泊14日＋通院4回in東京都豊島区05日程 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥353,000</td>
+          <td class="nights">13泊</td>
+          <td class="ppn">¥27,153</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/126-25-32-2771/" target="_blank">19-44歳：★札幌市清田区で入院治験★6泊2回②</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">北海道</span></td>
+          <td class="comp">¥351,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥58,500</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36920.html" target="_blank">池袋開催 【13泊14日入院】5月日程</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥350,000</td>
+          <td class="nights">13泊</td>
+          <td class="ppn">¥26,923</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/6212" target="_blank">【7泊×2回】18～44歳 日本人男性</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥306,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥21,857</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/126-24-31-2320/" target="_blank">★札幌市清田区で入院治験★5泊2回</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">北海道</span></td>
+          <td class="comp">¥301,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥60,200</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1113" target="_blank">治験コード：ES0004 新着！【東京/男性/BMI23以上の方向け 食品モニター試験】事前検査2回+来院1回+在宅モニター試験(30歳～64歳) 65,000</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">東京都港区</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">—</td>
+          <td class="ppn">—</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001IjSdJYAV" target="_blank">18～45歳 日本人健康男性対象【入院】試験☆5泊×2回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥283,000</td>
+          <td class="nights">10泊</td>
+          <td class="ppn">¥28,300</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/102-07-2754/" target="_blank">18-49歳：非喫煙者◆3泊4日×2＋通院7回in東京都豊島区01日程</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥270,008</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥45,001</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/126-26-01-2783/" target="_blank">19-69歳：★札幌市清田区で入院治験★4泊2回※閉経後 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥261,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥65,250</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/126-26-02-2784/" target="_blank">19-69歳：★札幌市清田区で入院治験★4泊2回※閉経前 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥261,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥65,250</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001HteaQYAR" target="_blank">24～49歳 日本人健康男性対象【入院・通院】試験☆2泊×2+通院9回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥243,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥60,750</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001JRYv0YAH" target="_blank">18～45歳 健康男性対象【入院・通院】試験☆9泊+通院6回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">大阪府</span></td>
+          <td class="comp">¥233,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥25,889</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/38-22-2800/" target="_blank">19-44歳：非喫煙者対象★札幌市厚別区で4泊2回入院Part 1★ - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥223,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥55,750</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/38-23-2801/" target="_blank">19-44歳：非喫煙者対象★札幌市厚別区で4泊2回入院Part 2★ - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥223,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥55,750</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/6167" target="_blank">＼GW明け開始！／【《ジェネリック医薬品》4泊×2回】健康な19～44歳日本人男性対象</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">東京都台東区</span></td>
+          <td class="comp">¥220,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥27,500</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://c-vs.jp/item_detail/MP237/" target="_blank">【東京都台東区】19～44歳 入院4泊5日×2回 治験｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥220,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥55,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://new-ing.jp/recruited/26017" target="_blank">健康な20～44歳の男性にご協力いただく6泊×2回の入院治験 | 治験情報サイト ニューイング</a></td>
+          <td><span class="badge badge-site">ニューイング</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥213,500</td>
+          <td class="nights">12泊</td>
+          <td class="ppn">¥17,791</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/6225" target="_blank">【6泊2回】健康な20～44歳の男性対象</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">埼玉県上尾市</span></td>
+          <td class="comp">¥213,500</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥35,583</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/4-38-2789/" target="_blank">20-44歳：喫煙者OK★埼玉上尾市入院＠6泊7日×2回改 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥213,500</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥35,583</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/4-39-2790/" target="_blank">20-44歳：魅惑★土曜日程あり6泊7日×2回in埼玉上尾市入院 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥213,500</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥35,583</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/6210" target="_blank">【8泊+通院1回】18～39歳 日本人男性</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥206,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥25,750</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/5529" target="_blank">【4泊×2回＋事前検査1回】20～40歳 日本人男性対象 ジェネリック医薬品試験</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area"></span></td>
+          <td class="comp">¥205,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥25,625</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/5528" target="_blank">【9泊のみ】20歳～44歳 日本人男性対象</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area"></span></td>
+          <td class="comp">¥198,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥22,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://c-vs.jp/item_detail/AG450-G1/" target="_blank">協力費up！【埼玉県上尾市】20～45歳 入院4泊5日×2回 治験＜金～火入院＞｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CV</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥193,500</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥48,375</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://c-vs.jp/item_detail/AI245-G2/" target="_blank">【埼玉県越谷市】18～45歳 入院4泊5日×2回 治験  ≪月-金入院≫｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥190,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥47,500</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/5620" target="_blank">指定の実施施設での治験モニター　【4泊2回】20歳～40歳 日本人男性対象</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥188,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥47,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://new-ing.jp/recruited/26021" target="_blank">健康な18～40歳の男性にご協力いただく6泊程度の入院治験 | 治験情報サイト ニューイング</a></td>
+          <td><span class="badge badge-site">ニューイング</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥185,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥30,833</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/5524" target="_blank">【3泊2回+通院1回】18歳～40歳 日本人男性 市販されている錠剤と治験薬の飲み比べ試験</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area"></span></td>
+          <td class="comp">¥180,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥60,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://c-vs.jp/item_detail/SU176/" target="_blank">新着 【東京都墨田区】18～45歳 入院3泊4日×2回+通院2回もしくは3回 治験 健康 男性 非喫煙者 詳細はこちら</a></td>
+          <td><span class="badge badge-site">JCVN</span> <span class="badge badge-site">クリニカルボランティアサポート</span> <span class="badge badge-dup">2サイト重複</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥177,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥29,500</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/4-43-2795/" target="_blank">20-45歳：人気の長期★6泊7日×2回in埼玉上尾市入院 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥173,500</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥28,916</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/4-44-2796/" target="_blank">20-45歳：人気の長期2nd★6泊7日×2回in埼玉上尾市入院 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥173,500</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥28,916</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1126" target="_blank">新着！【東京都新宿区で実施/男性】事前検査1回＋2泊×2回(18歳～39歳)｜治験バイト募集の治験バンク 高額治験アルバイト・モニター募集｜治験バンク</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥141,648</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥35,412</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/4-41-2793/" target="_blank">20-44歳：5月終了＠3泊4日×2回in埼玉県上尾市 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥138,500</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,166</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/4-42-2794/" target="_blank">20-44歳：週末入院★3泊4日×2回in埼玉県上尾市 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥138,500</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,166</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://c-vs.jp/item_detail/AG449-A/" target="_blank">【埼玉県上尾市】20～44歳 入院3泊4日×2回 治験＜月～木入院＞｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥138,500</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,166</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://c-vs.jp/item_detail/AG449-B/" target="_blank">【埼玉県上尾市】20～44歳 入院3泊4日×2回 治験＜木～日入院＞｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥138,500</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,166</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001IvaiDYAR" target="_blank">《BMI高めも参加可！》18～49歳 日本人健康男性対象【入院・通院】試験☆3泊+通院4回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥138,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/6203" target="_blank">＜3泊4日入所+来所3回+事後検査＞健康な方対象試験</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">東京都豊島区</span></td>
+          <td class="comp">¥138,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/6121" target="_blank">【3泊×2回+通院1回】20～40歳 健康な日本人男性</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥129,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥21,500</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://c-vs.jp/item_detail/SU175/" target="_blank">新着 【東京都墨田区】18～49歳 事前検診2回+入院3泊×1回+通院1回 治験 健康 男性 詳細はこちら</a></td>
+          <td><span class="badge badge-site">JCVN</span> <span class="badge badge-site">クリニカルボランティアサポート</span> <span class="badge badge-site">治験ジャパン</span> <span class="badge badge-dup">3サイト重複</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥114,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥38,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://c-vs.jp/item_detail/SU174/" target="_blank">検診日程再追加【東京都墨田区】18～45歳 入院2泊3日×2回 治験｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥107,000</td>
+          <td class="nights">2泊</td>
+          <td class="ppn">¥53,500</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://c-vs.jp/item_detail/SYH028/" target="_blank">【神奈川県横浜市】20～40歳 入院2泊3日×2回 治験＜日-火入院＞｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">神奈川県</span></td>
+          <td class="comp">¥103,000</td>
+          <td class="nights">2泊</td>
+          <td class="ppn">¥51,500</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001IlJsMYAV" target="_blank">18～59歳 日本人健康男性対象【入院】試験☆3泊×1回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥102,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥34,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36785.html" target="_blank">【追加日程】慢性肝機能障害で通院中の方対象☆新宿区 3泊+1通院</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">新宿区</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥33,333</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36341.html" target="_blank">軽度・中等度肝機能障害患者★肝硬変、ウイルス性肝炎、脂肪肝、その他の肝機能障害の指摘がある方対象☆新宿区 3泊+1通院</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">新宿区</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥33,333</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36102.html" target="_blank">慢性肝機能障害(肝硬変・ウイルス性肺炎・脂肪肝等)で通院中の方対象☆新宿区 3泊+1通院</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">新宿区</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥33,333</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK000017IH14YAG" target="_blank">18～75歳 肝疾患がある方対象【入院・通院】試験☆3泊+通院1回</a></td>
+          <td><span class="badge badge-site">JCVN</span> <span class="badge badge-site">ぺいるーと</span> <span class="badge badge-dup">2サイト重複</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥33,333</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://gogochiken.jp/project/4340" target="_blank">CL2621 軽度・中等度肝機能障害患者対象試験</a></td>
+          <td><span class="badge badge-site">治験情報V-NET</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">—</td>
+          <td class="ppn">—</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://pa-ruit.jp/3-08-2785/" target="_blank">18-75歳：肝機能障害のある方対象・3泊4日＋通院1回モニター - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥33,333</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/5530" target="_blank">【3泊のみ】20歳～44歳 健康な日本人男性</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥68,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥22,667</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://gogochiken.jp/project/4342" target="_blank">都内実施　事前検査＋入院3泊4日+通院3回+事後検査試験｜治験情報V-NET</a></td>
+          <td><span class="badge badge-site">治験情報V-NET</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥60,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥20,000</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://gogochiken.jp/project/4343" target="_blank">SE2632 都内実施 入院＋通院試験</a></td>
+          <td><span class="badge badge-site">治験情報V-NET</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥40,000</td>
+          <td class="nights">—</td>
+          <td class="ppn">—</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://chiken-japan.co.jp/project/6216" target="_blank">【3泊×2回+通院2回】18～45歳 日本人男性</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥10,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥1,667</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36653.html" target="_blank">【20歳～39歳の方対象】短期PET検査モニター入院なし♪</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">愛知県大府市</span></td>
+          <td class="comp">¥7,000</td>
+          <td class="nights">—</td>
+          <td class="ppn">—</td>
+        </tr>
+        <tr class="hidden">
+          <td class="date-cell undated">未定</td>
+          <td><a href="https://gogochiken.jp/project/4329" target="_blank">CM2621 【来院1回】BMI25.5以上の方を対象とした検査モニター</a></td>
+          <td><span class="badge badge-site">治験情報V-NET</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥5,000</td>
+          <td class="nights">—</td>
+          <td class="ppn">—</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <label>検索:</label>
+    <input type="text" id="searchInput" placeholder="キーワードで絞り込み...">
+    <label>地域:</label>
+    <select id="areaFilter">
+      <option value="">すべて</option>
+      <option value="不明">不明 (19)</option><option value="中部">中部 (63)</option><option value="九州・沖縄">九州・沖縄 (9)</option><option value="北海道">北海道 (2)</option><option value="関東">関東 (20)</option><option value="関西">関西 (1)</option>
+    </select>
+    <label>カテゴリ:</label>
+    <select id="catFilter">
+      <option value="">すべて</option>
+      <option value="メジャー・大規模">メジャー・大規模 (24)</option><option value="中堅・実績あり">中堅・実績あり (24)</option><option value="特定エリア・施設直営">特定エリア・施設直営 (66)</option>
+    </select>
+    <label>サイト:</label>
+    <select id="siteFilter">
+      <option value="">すべて</option>
+      <option value="JCVN">JCVN (14)</option><option value="SEHMA北陸">SEHMA北陸 (62)</option><option value="ぺいるーと">ぺいるーと (5)</option><option value="コーメディカルクラブ">コーメディカルクラブ (5)</option><option value="ニューイング">ニューイング (2)</option><option value="ボランティアサーチ">ボランティアサーチ (3)</option><option value="治験についてのサイト">治験についてのサイト (1)</option><option value="治験コンシェル">治験コンシェル (7)</option><option value="治験ジャパン">治験ジャパン (5)</option><option value="治験バンク">治験バンク (7)</option><option value="治験情報V-NET">治験情報V-NET (3)</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="mainTable">
+      <thead>
+        <tr>
+          <th data-col="0">#</th>
+          <th data-col="1">案件名</th>
+          <th data-col="2">サイト</th>
+          <th data-col="3">地域</th>
+          <th data-col="4">負担軽減費</th>
+          <th data-col="5">泊数</th>
+          <th data-col="6">1泊単価</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="item-row" data-site="生活向上WEB" data-area="不明">
+          <td>1</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36935.html" target="_blank" rel="noopener">福岡 3泊+通院1回+3泊+通院2回 5/8(金)から</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥229,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥38,166</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="不明">
+          <td>2</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36926.html" target="_blank" rel="noopener">浅草 4泊×2回+2通院  6/8(月)から[非喫煙者対象]</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥250,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥31,250</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="不明">
+          <td>3</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36920.html" target="_blank" rel="noopener">池袋開催 【13泊14日入院】5月日程</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥350,000</td>
+          <td class="nights">13泊</td>
+          <td class="ppn">¥26,923</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="登場★港区">
+          <td>4</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36919.html" target="_blank" rel="noopener">追加日程登場★港区 15泊+6通院 5/12(火)から[65歳以上限定]※単回皮下注射</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">登場★港区</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="不明">
+          <td>5</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36871.html" target="_blank" rel="noopener">短期 2泊×2回 5/21(木)から in 横浜</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥25,000</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="東京都">
+          <td>6</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36865.html" target="_blank" rel="noopener">東京都 3泊+通院1回 5/14(木)or5/19(火)から</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥106,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="ずか★港区">
+          <td>7</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36853.html" target="_blank" rel="noopener">残りわずか★港区 15泊+6通院 5/12(火)から[65歳以上限定]※単回皮下注射</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">ずか★港区</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="不明">
+          <td>8</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36847.html" target="_blank" rel="noopener">福岡 8泊+通院1回 5/10(日)or5/17(日)or5/24(日)から[非喫煙者対象]</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥206,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥25,750</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="不明">
+          <td>9</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36844.html" target="_blank" rel="noopener">福岡 7泊×2回 4/24(金)	or	5/10(日)から</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥306,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥21,857</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="不明">
+          <td>10</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36839.html" target="_blank" rel="noopener">横浜 2泊×2回 5/24(日)から</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥25,000</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="新宿区">
+          <td>11</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36785.html" target="_blank" rel="noopener">【追加日程】慢性肝機能障害で通院中の方対象☆新宿区 3泊+1通院</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">新宿区</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥33,333</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="東京都">
+          <td>12</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36762.html" target="_blank" rel="noopener">東京都 2泊×2回+電話確認5回 4/20(月)or4/26(日)or5/2(土)or5/8(金)から [非喫煙者対象]</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥104,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥26,000</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="不明">
+          <td>13</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36655.html" target="_blank" rel="noopener">4泊5日+通院2回in奈良[注射薬]※5/11入院スタート</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥110,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥27,500</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="港区">
+          <td>14</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36414.html" target="_blank" rel="noopener">港区 16泊+3泊+2泊+13通院 6/1(月)から[非喫煙者対象/血圧高めの方]※反復皮下注射</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">港区</span></td>
+          <td class="comp">¥840,000</td>
+          <td class="nights">21泊</td>
+          <td class="ppn">¥40,000</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="港区">
+          <td>15</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36413.html" target="_blank" rel="noopener">65歳以上限定☆港区 15泊+6通院 5/12(火)から[非喫煙者対象]※単回皮下注射</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">港区</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="港区">
+          <td>16</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36412.html" target="_blank" rel="noopener">港区 15泊+6通院 7/22(水)から[非喫煙者対象]※単回皮下注射</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">港区</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="新宿区">
+          <td>17</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36341.html" target="_blank" rel="noopener">軽度・中等度肝機能障害患者★肝硬変、ウイルス性肝炎、脂肪肝、その他の肝機能障害の指摘がある方対象☆新宿区 3泊+1通院</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">新宿区</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥33,333</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="新宿区">
+          <td>18</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36102.html" target="_blank" rel="noopener">慢性肝機能障害(肝硬変・ウイルス性肺炎・脂肪肝等)で通院中の方対象☆新宿区 3泊+1通院</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">新宿区</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥33,333</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="東京都">
+          <td>19</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36866.html" target="_blank" rel="noopener">東京都 3泊×2回+通院2回 5/13(水)から</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥174,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥29,000</td>
+        </tr>
+        <tr class="item-row" data-site="生活向上WEB" data-area="愛知県大府市">
+          <td>20</td>
+          <td><a href="https://www.seikatsu-kojo.jp/clinical/36653.html" target="_blank" rel="noopener">【20歳～39歳の方対象】短期PET検査モニター入院なし♪</a></td>
+          <td><span class="badge badge-site">生活向上WEB</span></td>
+          <td><span class="badge badge-area">愛知県大府市</span></td>
+          <td class="comp">¥7,000</td>
+          <td class="nights">—</td>
+          <td class="ppn">—</td>
+        </tr>
+        <tr class="item-row" data-site="JCVN" data-area="東京都">
+          <td>21</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001DD6XTYA1" target="_blank" rel="noopener">20～55歳の健常男性対象【入院】試験☆8泊×3回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥545,000</td>
+          <td class="nights">24泊</td>
+          <td class="ppn">¥22,708</td>
+        </tr>
+        <tr class="item-row" data-site="JCVN" data-area="東京都">
+          <td>22</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001Jh3btYAB" target="_blank" rel="noopener">18～45歳 日本人健康男性対象【入院・通院】試験☆6泊×2＋通院4回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥410,000</td>
+          <td class="nights">12泊</td>
+          <td class="ppn">¥34,167</td>
+        </tr>
+        <tr class="item-row" data-site="JCVN" data-area="東京都">
+          <td>23</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001IjSdJYAV" target="_blank" rel="noopener">18～45歳 日本人健康男性対象【入院】試験☆5泊×2回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥283,000</td>
+          <td class="nights">10泊</td>
+          <td class="ppn">¥28,300</td>
+        </tr>
+        <tr class="item-row" data-site="JCVN" data-area="東京都">
+          <td>24</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001HteaQYAR" target="_blank" rel="noopener">24～49歳 日本人健康男性対象【入院・通院】試験☆2泊×2+通院9回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥243,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥60,750</td>
+        </tr>
+        <tr class="item-row" data-site="JCVN" data-area="大阪府">
+          <td>25</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001JRYv0YAH" target="_blank" rel="noopener">18～45歳 健康男性対象【入院・通院】試験☆9泊+通院6回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">大阪府</span></td>
+          <td class="comp">¥233,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥25,889</td>
+        </tr>
+        <tr class="item-row" data-site="JCVN" data-area="東京都">
+          <td>26</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001IvaiDYAR" target="_blank" rel="noopener">《BMI高めも参加可！》18～49歳 日本人健康男性対象【入院・通院】試験☆3泊+通院4回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥138,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,000</td>
+        </tr>
+        <tr class="item-row" data-site="JCVN" data-area="東京都">
+          <td>27</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK00001IlJsMYAV" target="_blank" rel="noopener">18～59歳 日本人健康男性対象【入院】試験☆3泊×1回</a></td>
+          <td><span class="badge badge-site">JCVN</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥102,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥34,000</td>
+        </tr>
+        <tr class="item-row" data-site="JCVN" data-area="東京都">
+          <td>28</td>
+          <td><a href="https://www.jcvn.jp/mypage/detail/?id=701TK000017IH14YAG" target="_blank" rel="noopener">18～75歳 肝疾患がある方対象【入院・通院】試験☆3泊+通院1回</a></td>
+          <td><span class="badge badge-site">JCVN</span> <span class="badge badge-site">ぺいるーと</span> <span class="badge badge-dup">2サイト重複</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥33,333</td>
+        </tr>
+        <tr class="item-row" data-site="ニューイング" data-area="不明">
+          <td>29</td>
+          <td><a href="https://new-ing.jp/recruited/26017" target="_blank" rel="noopener">健康な20～44歳の男性にご協力いただく6泊×2回の入院治験 | 治験情報サイト ニューイング</a></td>
+          <td><span class="badge badge-site">ニューイング</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥213,500</td>
+          <td class="nights">12泊</td>
+          <td class="ppn">¥17,791</td>
+        </tr>
+        <tr class="item-row" data-site="ニューイング" data-area="不明">
+          <td>30</td>
+          <td><a href="https://new-ing.jp/recruited/26021" target="_blank" rel="noopener">健康な18～40歳の男性にご協力いただく6泊程度の入院治験 | 治験情報サイト ニューイング</a></td>
+          <td><span class="badge badge-site">ニューイング</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥185,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥30,833</td>
+        </tr>
+        <tr class="item-row" data-site="ニューイング" data-area="東京都">
+          <td>31</td>
+          <td><a href="https://new-ing.jp/recruited/26018" target="_blank" rel="noopener">No-26018 2026.04.06 健康な65～79歳の方にご協力いただく15泊×1回＋来院6回の治験 治験 対象者 65～79歳の日本人 男性 地域 東京都</a></td>
+          <td><span class="badge badge-site">ニューイング</span> <span class="badge badge-site">治験ジャパン</span> <span class="badge badge-dup">2サイト重複</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="不明">
+          <td>32</td>
+          <td><a href="https://chiken-japan.co.jp/project/5620" target="_blank" rel="noopener">指定の実施施設での治験モニター　【4泊2回】20歳～40歳 日本人男性対象</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥188,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥47,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="東京都港区">
+          <td>33</td>
+          <td><a href="https://chiken-japan.co.jp/project/6199" target="_blank" rel="noopener">【15泊+来院6回】健康な18～54歳の男性対象</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">東京都港区</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="福岡県福岡市">
+          <td>34</td>
+          <td><a href="https://chiken-japan.co.jp/project/6212" target="_blank" rel="noopener">【7泊×2回】18～44歳 日本人男性</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥306,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥21,857</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="東京都台東区">
+          <td>35</td>
+          <td><a href="https://chiken-japan.co.jp/project/6167" target="_blank" rel="noopener">＼GW明け開始！／【《ジェネリック医薬品》4泊×2回】健康な19～44歳日本人男性対象</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">東京都台東区</span></td>
+          <td class="comp">¥220,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥27,500</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="埼玉県上尾市">
+          <td>36</td>
+          <td><a href="https://chiken-japan.co.jp/project/6225" target="_blank" rel="noopener">【6泊2回】健康な20～44歳の男性対象</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">埼玉県上尾市</span></td>
+          <td class="comp">¥213,500</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥35,583</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="福岡県福岡市">
+          <td>37</td>
+          <td><a href="https://chiken-japan.co.jp/project/6210" target="_blank" rel="noopener">【8泊+通院1回】18～39歳 日本人男性</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥206,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥25,750</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="">
+          <td>38</td>
+          <td><a href="https://chiken-japan.co.jp/project/5529" target="_blank" rel="noopener">【4泊×2回＋事前検査1回】20～40歳 日本人男性対象 ジェネリック医薬品試験</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area"></span></td>
+          <td class="comp">¥205,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥25,625</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="">
+          <td>39</td>
+          <td><a href="https://chiken-japan.co.jp/project/5528" target="_blank" rel="noopener">【9泊のみ】20歳～44歳 日本人男性対象</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area"></span></td>
+          <td class="comp">¥198,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥22,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="">
+          <td>40</td>
+          <td><a href="https://chiken-japan.co.jp/project/5524" target="_blank" rel="noopener">【3泊2回+通院1回】18歳～40歳 日本人男性 市販されている錠剤と治験薬の飲み比べ試験</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area"></span></td>
+          <td class="comp">¥180,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥60,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="東京都豊島区">
+          <td>41</td>
+          <td><a href="https://chiken-japan.co.jp/project/6203" target="_blank" rel="noopener">＜3泊4日入所+来所3回+事後検査＞健康な方対象試験</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">東京都豊島区</span></td>
+          <td class="comp">¥138,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="福岡県福岡市">
+          <td>42</td>
+          <td><a href="https://chiken-japan.co.jp/project/6121" target="_blank" rel="noopener">【3泊×2回+通院1回】20～40歳 健康な日本人男性</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥129,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥21,500</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="東京都">
+          <td>43</td>
+          <td><a href="https://chiken-japan.co.jp/project/5530" target="_blank" rel="noopener">【3泊のみ】20歳～44歳 健康な日本人男性</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥68,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥22,667</td>
+        </tr>
+        <tr class="item-row" data-site="治験ジャパン" data-area="東京都墨田区">
+          <td>44</td>
+          <td><a href="https://chiken-japan.co.jp/project/6216" target="_blank" rel="noopener">【3泊×2回+通院2回】18～45歳 日本人男性</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥10,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥1,667</td>
+        </tr>
+        <tr class="item-row" data-site="治験情報V-NET" data-area="不明">
+          <td>45</td>
+          <td><a href="https://gogochiken.jp/project/4342" target="_blank" rel="noopener">都内実施　事前検査＋入院3泊4日+通院3回+事後検査試験｜治験情報V-NET</a></td>
+          <td><span class="badge badge-site">治験情報V-NET</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥60,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥20,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験情報V-NET" data-area="不明">
+          <td>46</td>
+          <td><a href="https://gogochiken.jp/project/4345" target="_blank" rel="noopener">都内実施　入院15泊1回＋通院6回｜治験情報V-NET</a></td>
+          <td><span class="badge badge-site">治験情報V-NET</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥530,000</td>
+          <td class="nights">15泊</td>
+          <td class="ppn">¥35,333</td>
+        </tr>
+        <tr class="item-row" data-site="治験情報V-NET" data-area="東京都">
+          <td>47</td>
+          <td><a href="https://gogochiken.jp/project/4340" target="_blank" rel="noopener">CL2621 軽度・中等度肝機能障害患者対象試験</a></td>
+          <td><span class="badge badge-site">治験情報V-NET</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">—</td>
+          <td class="ppn">—</td>
+        </tr>
+        <tr class="item-row" data-site="治験情報V-NET" data-area="東京都">
+          <td>48</td>
+          <td><a href="https://gogochiken.jp/project/4343" target="_blank" rel="noopener">SE2632 都内実施 入院＋通院試験</a></td>
+          <td><span class="badge badge-site">治験情報V-NET</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥40,000</td>
+          <td class="nights">—</td>
+          <td class="ppn">—</td>
+        </tr>
+        <tr class="item-row" data-site="治験情報V-NET" data-area="東京都">
+          <td>49</td>
+          <td><a href="https://gogochiken.jp/project/4329" target="_blank" rel="noopener">CM2621 【来院1回】BMI25.5以上の方を対象とした検査モニター</a></td>
+          <td><span class="badge badge-site">治験情報V-NET</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥5,000</td>
+          <td class="nights">—</td>
+          <td class="ppn">—</td>
+        </tr>
+        <tr class="item-row" data-site="治験ウェブ" data-area="東京都">
+          <td>50</td>
+          <td><a href="https://www.chikenweb.jp/chiken_detail.php?id=-1269" target="_blank" rel="noopener">【東京】2026年5月18日開始　健康成人を対象としたお薬モニター（6泊7日×2回＋通院4回）／大阪の治験情報を探すなら インクロム治験Web</a></td>
+          <td><span class="badge badge-site">治験ウェブ</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥400,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥66,666</td>
+        </tr>
+        <tr class="item-row" data-site="治験ウェブ" data-area="大阪府">
+          <td>51</td>
+          <td><a href="https://www.chikenweb.jp/chiken_detail.php?id=5858" target="_blank" rel="noopener">【大阪】2026年5月10日開始　健康な男性対象の9泊10日の入院+通院6回宿泊モニター／大阪の治験情報を探すなら インクロム治験Web</a></td>
+          <td><span class="badge badge-site">治験ウェブ</span></td>
+          <td><span class="badge badge-area">大阪府</span></td>
+          <td class="comp">¥233,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥25,888</td>
+        </tr>
+        <tr class="item-row" data-site="治験ウェブ" data-area="大阪府">
+          <td>52</td>
+          <td><a href="https://www.chikenweb.jp/chiken_detail.php?id=5859" target="_blank" rel="noopener">【大阪】2026年5月13日開始　健康な男性対象の9泊10日の入院+通院6回宿泊モニター／大阪の治験情報を探すなら インクロム治験Web</a></td>
+          <td><span class="badge badge-site">治験ウェブ</span></td>
+          <td><span class="badge badge-area">大阪府</span></td>
+          <td class="comp">¥233,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥25,888</td>
+        </tr>
+        <tr class="item-row" data-site="治験ウェブ" data-area="大阪府">
+          <td>53</td>
+          <td><a href="https://www.chikenweb.jp/chiken_detail.php?id=5884" target="_blank" rel="noopener">【大阪】2026年5月4日開始　健康な男性対象の4泊5日×4回宿泊モニター／大阪の治験情報を探すなら インクロム治験Web</a></td>
+          <td><span class="badge badge-site">治験ウェブ</span></td>
+          <td><span class="badge badge-area">大阪府</span></td>
+          <td class="comp">¥312,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥78,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験ウェブ" data-area="大阪府">
+          <td>54</td>
+          <td><a href="https://www.chikenweb.jp/chiken_detail.php?id=5857" target="_blank" rel="noopener">●【大阪】2026年4月20日開始 健康な男性対象の9泊10日の入院+通院6回宿泊モニター</a></td>
+          <td><span class="badge badge-site">治験ウェブ</span></td>
+          <td><span class="badge badge-area">大阪府</span></td>
+          <td class="comp">¥233,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥25,889</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="東京都">
+          <td>55</td>
+          <td><a href="https://pa-ruit.jp/102-08c-2792/" target="_blank" rel="noopener">24-39歳：非喫煙者・長期◆13泊14日＋通院4回in東京都豊島区05日程 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥353,000</td>
+          <td class="nights">13泊</td>
+          <td class="ppn">¥27,153</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="不明">
+          <td>56</td>
+          <td><a href="https://pa-ruit.jp/126-26-01-2783/" target="_blank" rel="noopener">19-69歳：★札幌市清田区で入院治験★4泊2回※閉経後 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥261,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥65,250</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="不明">
+          <td>57</td>
+          <td><a href="https://pa-ruit.jp/126-26-02-2784/" target="_blank" rel="noopener">19-69歳：★札幌市清田区で入院治験★4泊2回※閉経前 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥261,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥65,250</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="不明">
+          <td>58</td>
+          <td><a href="https://pa-ruit.jp/3-08-2785/" target="_blank" rel="noopener">18-75歳：肝機能障害のある方対象・3泊4日＋通院1回モニター - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥100,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥33,333</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="不明">
+          <td>59</td>
+          <td><a href="https://pa-ruit.jp/38-21-2799/" target="_blank" rel="noopener">20-64歳：非喫煙者対象★ポリフェノール含有飲料★4泊4回入院 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥453,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥113,250</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="不明">
+          <td>60</td>
+          <td><a href="https://pa-ruit.jp/38-22-2800/" target="_blank" rel="noopener">19-44歳：非喫煙者対象★札幌市厚別区で4泊2回入院Part 1★ - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥223,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥55,750</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="不明">
+          <td>61</td>
+          <td><a href="https://pa-ruit.jp/38-23-2801/" target="_blank" rel="noopener">19-44歳：非喫煙者対象★札幌市厚別区で4泊2回入院Part 2★ - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥223,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥55,750</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="不明">
+          <td>62</td>
+          <td><a href="https://pa-ruit.jp/4-38-2789/" target="_blank" rel="noopener">20-44歳：喫煙者OK★埼玉上尾市入院＠6泊7日×2回改 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥213,500</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥35,583</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="不明">
+          <td>63</td>
+          <td><a href="https://pa-ruit.jp/4-39-2790/" target="_blank" rel="noopener">20-44歳：魅惑★土曜日程あり6泊7日×2回in埼玉上尾市入院 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥213,500</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥35,583</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="埼玉県">
+          <td>64</td>
+          <td><a href="https://pa-ruit.jp/4-41-2793/" target="_blank" rel="noopener">20-44歳：5月終了＠3泊4日×2回in埼玉県上尾市 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥138,500</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,166</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="埼玉県">
+          <td>65</td>
+          <td><a href="https://pa-ruit.jp/4-42-2794/" target="_blank" rel="noopener">20-44歳：週末入院★3泊4日×2回in埼玉県上尾市 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥138,500</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,166</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="不明">
+          <td>66</td>
+          <td><a href="https://pa-ruit.jp/4-43-2795/" target="_blank" rel="noopener">20-45歳：人気の長期★6泊7日×2回in埼玉上尾市入院 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥173,500</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥28,916</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="不明">
+          <td>67</td>
+          <td><a href="https://pa-ruit.jp/4-44-2796/" target="_blank" rel="noopener">20-45歳：人気の長期2nd★6泊7日×2回in埼玉上尾市入院 - 治験バイト・治験モニター募集サイト｜ぺいるーと</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥173,500</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥28,916</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="北海道">
+          <td>68</td>
+          <td><a href="https://pa-ruit.jp/126-25-32-2771/" target="_blank" rel="noopener">19-44歳：★札幌市清田区で入院治験★6泊2回②</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">北海道</span></td>
+          <td class="comp">¥351,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥58,500</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="北海道">
+          <td>69</td>
+          <td><a href="https://pa-ruit.jp/126-24-31-2320/" target="_blank" rel="noopener">★札幌市清田区で入院治験★5泊2回</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">北海道</span></td>
+          <td class="comp">¥301,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥60,200</td>
+        </tr>
+        <tr class="item-row" data-site="ぺいるーと" data-area="東京都">
+          <td>70</td>
+          <td><a href="https://pa-ruit.jp/102-07-2754/" target="_blank" rel="noopener">18-49歳：非喫煙者◆3泊4日×2＋通院7回in東京都豊島区01日程</a></td>
+          <td><span class="badge badge-site">ぺいるーと</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥270,008</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥45,001</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="東京都">
+          <td>71</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1126" target="_blank" rel="noopener">新着！【東京都新宿区で実施/男性】事前検査1回＋2泊×2回(18歳～39歳)｜治験バイト募集の治験バンク 高額治験アルバイト・モニター募集｜治験バンク</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥141,648</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥35,412</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="不明">
+          <td>72</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1127" target="_blank" rel="noopener">【九州/男性】5月18日(月)～5泊+通院1回(18歳～55歳)｜治験バイト募集の治験バンク 高額治験アルバイト・モニター募集｜治験バンク</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥115,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥23,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="不明">
+          <td>73</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1128" target="_blank" rel="noopener">【九州/男性】6月8日(月)～5泊+通院1回(18歳～55歳)｜治験バイト募集の治験バンク 高額治験アルバイト・モニター募集｜治験バンク</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥115,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥23,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="不明">
+          <td>74</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1129" target="_blank" rel="noopener">【九州/男性】6月3日(水)～4泊×2回(18歳～45歳)｜治験バイト募集の治験バンク 高額治験アルバイト・モニター募集｜治験バンク</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥160,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥20,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="不明">
+          <td>75</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1130" target="_blank" rel="noopener">【九州/男性】6月18日(木)～4泊×2回(18歳～45歳)｜治験バイト募集の治験バンク 高額治験アルバイト・モニター募集｜治験バンク</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">不明</span></td>
+          <td class="comp">¥160,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥20,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市">
+          <td>76</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1117" target="_blank" rel="noopener">治験コード：H021348-12 【九州/男性】5月26日(火)～14泊＋通院1回(18歳～55歳) 291,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥20,786</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市">
+          <td>77</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1116" target="_blank" rel="noopener">治験コード：H021348-11 【九州/男性】6月8日(月)～5泊+通院1回(18歳～55歳) 115,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥58,200</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市">
+          <td>78</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1115" target="_blank" rel="noopener">治験コード：H021348-10 【九州/男性】5月12日(火)～14泊＋通院1回(18歳～55歳) 291,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥20,786</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="東京都港区">
+          <td>79</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1113" target="_blank" rel="noopener">治験コード：ES0004 新着！【東京/男性/BMI23以上の方向け 食品モニター試験】事前検査2回+来院1回+在宅モニター試験(30歳～64歳) 65,000円(総額) モニター 在宅 男性</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">東京都港区</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">—</td>
+          <td class="ppn">—</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="熊本県">
+          <td>80</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1112" target="_blank" rel="noopener">治験コード：N021482-04 【九州/男性】5月1日(金)3泊×2回＋通院1回(18歳～49歳) 245,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">熊本県</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥48,500</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市">
+          <td>81</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1111" target="_blank" rel="noopener">治験コード：H021677-02 【九州/男性】6月3日(水)～7泊+通院1回(18歳～45歳) 148,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">7泊</td>
+          <td class="ppn">¥41,571</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市">
+          <td>82</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1110" target="_blank" rel="noopener">治験コード：H021677-01 【九州/男性】5月31日(日)～7泊+通院1回(18歳～45歳) 148,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">7泊</td>
+          <td class="ppn">¥41,571</td>
+        </tr>
+        <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市">
+          <td>83</td>
+          <td><a href="https://chiken-bank.com/case/detail.php?id=1109" target="_blank" rel="noopener">治験コード：H021613-01 【九州/男性】5月8日(金)～3泊+通院1回+3泊+通院2回(18歳～40歳) 229,000円 男性 入院+通院</a></td>
+          <td><span class="badge badge-site">治験バンク</span></td>
+          <td><span class="badge badge-area">福岡県福岡市</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥48,500</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>84</td>
+          <td><a href="https://chiken-net.site/products/detail/1003219" target="_blank" rel="noopener">【九州/福岡/全国から参加可能（関東在住者は不可）】【福岡観光OK】【BMI基準緩め】【非喫煙者限定】5月12日(火) ～治験開始 14泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥291,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥20,786</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>85</td>
+          <td><a href="https://chiken-net.site/products/detail/1001085" target="_blank" rel="noopener">【九州/福岡/新着】【中期ジェネリック治験】【喫煙者可】5月10日(日) ～治験開始 7泊×2回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥266,000</td>
+          <td class="nights">14泊</td>
+          <td class="ppn">¥19,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>86</td>
+          <td><a href="https://chiken-net.site/products/detail/1003067" target="_blank" rel="noopener">【九州/福岡/お得治験】【四国地方・関西地方・中部地方の方も参加可】【非喫煙者限定】5月10日(日) ～治験開始 8泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥256,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥32,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="熊本県">
+          <td>87</td>
+          <td><a href="https://chiken-net.site/products/detail/1003214" target="_blank" rel="noopener">【九州/熊本/お得治験】【四国地方・関西地方・中部地方の方も参加可】【ジェネリック治験】【熊本観光も可】5月1日(金) ～治験開始 3泊×2回+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">熊本県</span></td>
+          <td class="comp">¥245,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥40,833</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>88</td>
+          <td><a href="https://chiken-net.site/products/detail/1002970" target="_blank" rel="noopener">【九州/福岡/新着】【ジェネリック治験】【喫煙者可】5月8日(金) ～治験開始 3泊×2回＋通院3回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥229,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥38,167</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="東京都">
+          <td>89</td>
+          <td><a href="https://chiken-net.site/products/detail/1003216" target="_blank" rel="noopener">【関東/東京/新着】【短期ジェネリック治験】【19～44歳】【非喫煙者】5月13日(水)～ 治験開始 4泊×2回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥220,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥27,500</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区">
+          <td>90</td>
+          <td><a href="https://chiken-net.site/products/detail/1002962" target="_blank" rel="noopener">【関東/東京/新着】【喫煙者可】【18歳～44歳】 5月9日(土)～治験開始 8泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥210,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥26,250</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区">
+          <td>91</td>
+          <td><a href="https://chiken-net.site/products/detail/1002961" target="_blank" rel="noopener">【関東/東京/新着】【喫煙者可】【18歳～44歳】 5月13日(水)～治験開始 8泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥210,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥26,250</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>92</td>
+          <td><a href="https://chiken-net.site/products/detail/1003066" target="_blank" rel="noopener">【九州/福岡/新着】【四国地方・関西地方・中部地方の方も参加可】【非喫煙者限定】5月17日(日)～治験開始 8泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥206,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥25,750</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>93</td>
+          <td><a href="https://chiken-net.site/products/detail/1000594" target="_blank" rel="noopener">【九州/福岡/新着】【非喫煙者】【18～55歳】5月18日(月) ～治験開始 5泊+4泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥196,000</td>
+          <td class="nights">9泊</td>
+          <td class="ppn">¥21,778</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="熊本県">
+          <td>94</td>
+          <td><a href="https://chiken-net.site/products/detail/1003102" target="_blank" rel="noopener">【九州/熊本/お得治験】【短期治験】【ジェネリック治験】【喫煙者可】5月4日(月)～治験開始 3泊×2回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">熊本県</span></td>
+          <td class="comp">¥184,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥30,667</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="熊本県">
+          <td>95</td>
+          <td><a href="https://chiken-net.site/products/detail/1003097" target="_blank" rel="noopener">【九州/熊本/お得治験】【短期治験】【ジェネリック治験】【喫煙者可】5月14日(木) ～治験開始 3泊×2回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">熊本県</span></td>
+          <td class="comp">¥184,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥30,667</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>96</td>
+          <td><a href="https://chiken-net.site/products/detail/1000694" target="_blank" rel="noopener">【九州/福岡/新着】【非喫煙者限定】5月24日(日) ～治験開始 8泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥156,000</td>
+          <td class="nights">8泊</td>
+          <td class="ppn">¥19,500</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>97</td>
+          <td><a href="https://chiken-net.site/products/detail/1003194" target="_blank" rel="noopener">【九州/福岡/新着】【非喫煙者限定】【45歳まで可】5月31日(日)～治験開始 7泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥148,000</td>
+          <td class="nights">7泊</td>
+          <td class="ppn">¥21,143</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>98</td>
+          <td><a href="https://chiken-net.site/products/detail/1000328" target="_blank" rel="noopener">【九州/福岡/新着】【非喫煙者限定】【45歳まで可】6月3日(水) ～治験開始 7泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥148,000</td>
+          <td class="nights">7泊</td>
+          <td class="ppn">¥21,143</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区">
+          <td>99</td>
+          <td><a href="https://chiken-net.site/products/detail/1003077" target="_blank" rel="noopener">【関東/東京/お得治験】【短期治験】【18歳～45歳】5月8日(金)～治験開始 2泊×2回+メール連絡5回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥127,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥31,750</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区">
+          <td>100</td>
+          <td><a href="https://chiken-net.site/products/detail/1003144" target="_blank" rel="noopener">【関東/東京/お得治験】【短期治験】【18歳～45歳】5月2日(土)～治験開始 2泊×2回+メール連絡5回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥127,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥31,750</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区">
+          <td>101</td>
+          <td><a href="https://chiken-net.site/products/detail/1003082" target="_blank" rel="noopener">【関東/東京/お得治験】【短期治験】【18歳～45歳】4月26日(日)～治験開始 2泊×2回+メール連絡5回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥127,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥31,750</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>102</td>
+          <td><a href="https://chiken-net.site/products/detail/1002720" target="_blank" rel="noopener">【九州/福岡】【BMI基準緩め】【18～55歳】6月8日(月)～治験開始 5泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥115,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥23,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>103</td>
+          <td><a href="https://chiken-net.site/products/detail/1000304" target="_blank" rel="noopener">【九州/福岡/新着】【18歳～55歳】【非喫煙者限定】5月9日(土)～治験開始 5泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥115,000</td>
+          <td class="nights">5泊</td>
+          <td class="ppn">¥23,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区">
+          <td>104</td>
+          <td><a href="https://chiken-net.site/products/detail/1003181" target="_blank" rel="noopener">【関東/東京/新着】【短期入院治験】【18歳～45歳】5月6日(水)～治験開始 4泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥114,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥28,500</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区">
+          <td>105</td>
+          <td><a href="https://chiken-net.site/products/detail/1003211" target="_blank" rel="noopener">【関東/東京/新着】【短期入院治験】【18歳～45歳】5月20日(水)～治験開始 4泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥114,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥28,500</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区">
+          <td>106</td>
+          <td><a href="https://chiken-net.site/products/detail/1003108" target="_blank" rel="noopener">【関東/東京/新着】【短期入院治験】【喫煙者可】【18歳～49歳】5月14日(木)～治験開始 3泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥109,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥36,333</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区">
+          <td>107</td>
+          <td><a href="https://chiken-net.site/products/detail/1003089" target="_blank" rel="noopener">【関東/東京/新着】【短期入院治験】【喫煙者可】【18歳～49歳】5月19日(火)～治験開始 3泊＋通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥109,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥36,333</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="神奈川県">
+          <td>108</td>
+          <td><a href="https://chiken-net.site/products/detail/1003218" target="_blank" rel="noopener">【関東/神奈川横浜市/新着】【短期ジェネリック治験】【20～40歳】【喫煙者可（ただし入院期間中禁煙）】6月7日(日)～ 治験開始 2泊2回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">神奈川県</span></td>
+          <td class="comp">¥103,000</td>
+          <td class="nights">2泊</td>
+          <td class="ppn">¥51,500</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="熊本県">
+          <td>109</td>
+          <td><a href="https://chiken-net.site/products/detail/1000619" target="_blank" rel="noopener">【九州/熊本/新着】【超短期治験】【非喫煙者限定】【ジェネリック治験】5月9日(土)～治験開始 2泊×2回+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">熊本県</span></td>
+          <td class="comp">¥103,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥25,750</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>110</td>
+          <td><a href="https://chiken-net.site/products/detail/1000688" target="_blank" rel="noopener">【九州/福岡/新着】【短期治験】【非喫煙者限定】【18～45歳】4月29日(水) ～治験開始 4泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥91,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥22,750</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="福岡県">
+          <td>111</td>
+          <td><a href="https://chiken-net.site/products/detail/1002642" target="_blank" rel="noopener">【九州/福岡/新着】【喫煙者可】【18～55歳】【BMI基準緩め】5月6日(水) ～治験開始 3泊+通院1回</a></td>
+          <td><span class="badge badge-site">治験ネット</span></td>
+          <td><span class="badge badge-area">福岡県</span></td>
+          <td class="comp">¥72,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥24,000</td>
+        </tr>
+        <tr class="item-row" data-site="治験ネット" data-area="東京都">
+          <td>112</td>
+          <td><a href="https://chiken-net.site/products/detail/1003212" target="_blank" rel="noopener">【関東/東京台東区/新着】【飲料食品試験】【20～39歳】【非喫煙者】【男性】事前検査：5月8日(金)から 事前検査1回＋本試験 1泊1回</a></td>
+          <td><span class="badge badge-site">治験ジャパン</span> <span class="badge badge-site">治験ネット</span> <span class="badge badge-dup">2サイト重複</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥25,000</td>
+          <td class="nights">1泊</td>
+          <td class="ppn">¥25,000</td>
+        </tr>
+        <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="埼玉県">
+          <td>113</td>
+          <td><a href="https://c-vs.jp/item_detail/AG449-A/" target="_blank" rel="noopener">【埼玉県上尾市】20～44歳 入院3泊4日×2回 治験＜月～木入院＞｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥138,500</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,166</td>
+        </tr>
+        <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="埼玉県">
+          <td>114</td>
+          <td><a href="https://c-vs.jp/item_detail/AG449-B/" target="_blank" rel="noopener">【埼玉県上尾市】20～44歳 入院3泊4日×2回 治験＜木～日入院＞｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥138,500</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥46,166</td>
+        </tr>
+        <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="埼玉県">
+          <td>115</td>
+          <td><a href="https://c-vs.jp/item_detail/AG450-G1/" target="_blank" rel="noopener">協力費up！【埼玉県上尾市】20～45歳 入院4泊5日×2回 治験＜金～火入院＞｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥193,500</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥48,375</td>
+        </tr>
+        <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="埼玉県">
+          <td>116</td>
+          <td><a href="https://c-vs.jp/item_detail/AI245-G2/" target="_blank" rel="noopener">【埼玉県越谷市】18～45歳 入院4泊5日×2回 治験  ≪月-金入院≫｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">埼玉県</span></td>
+          <td class="comp">¥190,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥47,500</td>
+        </tr>
+        <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="東京都">
+          <td>117</td>
+          <td><a href="https://c-vs.jp/item_detail/MP237/" target="_blank" rel="noopener">【東京都台東区】19～44歳 入院4泊5日×2回 治験｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥220,000</td>
+          <td class="nights">4泊</td>
+          <td class="ppn">¥55,000</td>
+        </tr>
+        <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="東京都">
+          <td>118</td>
+          <td><a href="https://c-vs.jp/item_detail/SU174/" target="_blank" rel="noopener">検診日程再追加【東京都墨田区】18～45歳 入院2泊3日×2回 治験｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">東京都</span></td>
+          <td class="comp">¥107,000</td>
+          <td class="nights">2泊</td>
+          <td class="ppn">¥53,500</td>
+        </tr>
+        <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="神奈川県">
+          <td>119</td>
+          <td><a href="https://c-vs.jp/item_detail/SYH028/" target="_blank" rel="noopener">【神奈川県横浜市】20～40歳 入院2泊3日×2回 治験＜日-火入院＞｜はじめての治験ボランティア・モニター募集｜クリニカルボランティアサポート（CVS）</a></td>
+          <td><span class="badge badge-site">クリニカルボランティアサポート</span></td>
+          <td><span class="badge badge-area">神奈川県</span></td>
+          <td class="comp">¥103,000</td>
+          <td class="nights">2泊</td>
+          <td class="ppn">¥51,500</td>
+        </tr>
+        <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="東京都墨田区">
+          <td>120</td>
+          <td><a href="https://c-vs.jp/item_detail/SU176/" target="_blank" rel="noopener">新着 【東京都墨田区】18～45歳 入院3泊4日×2回+通院2回もしくは3回 治験 健康 男性 非喫煙者 詳細はこちら</a></td>
+          <td><span class="badge badge-site">JCVN</span> <span class="badge badge-site">クリニカルボランティアサポート</span> <span class="badge badge-dup">2サイト重複</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥177,000</td>
+          <td class="nights">6泊</td>
+          <td class="ppn">¥29,500</td>
+        </tr>
+        <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="東京都墨田区">
+          <td>121</td>
+          <td><a href="https://c-vs.jp/item_detail/SU175/" target="_blank" rel="noopener">新着 【東京都墨田区】18～49歳 事前検診2回+入院3泊×1回+通院1回 治験 健康 男性 詳細はこちら</a></td>
+          <td><span class="badge badge-site">JCVN</span> <span class="badge badge-site">クリニカルボランティアサポート</span> <span class="badge badge-site">治験ジャパン</span> <span class="badge badge-dup">3サイト重複</span></td>
+          <td><span class="badge badge-area">東京都墨田区</span></td>
+          <td class="comp">¥114,000</td>
+          <td class="nights">3泊</td>
+          <td class="ppn">¥38,000</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ── Charts ──
+const colors = ['#38bdf8','#4ade80','#fb923c','#a78bfa','#f472b6','#facc15','#34d399','#f87171','#818cf8','#22d3ee'];
+const areaCtx = document.getElementById('areaChart').getContext('2d');
+new Chart(areaCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ["関東", "関西", "中部", "九州・沖縄", "不明", "北海道"],
+    datasets: [{ data: [20, 1, 63, 9, 19, 2], backgroundColor: colors }]
+  },
+  options: { responsive: true, plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 } } } } }
+});
+
+const compCtx = document.getElementById('compChart').getContext('2d');
+new Chart(compCtx, {
+  type: 'bar',
+  data: {
+    labels: ["〜5万", "5〜10万", "10〜20万", "20〜50万", "50万〜", "不明"],
+    datasets: [{ label: '件数', data: [0, 0, 3, 4, 0, 107], backgroundColor: '#fb923c' }]
+  },
+  options: { responsive: true, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } }, plugins: { legend: { display: false } } }
+});
+
+const catCtx = document.getElementById('catChart').getContext('2d');
+new Chart(catCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ["メジャー・大規模", "中堅・実績あり", "特定エリア・施設直営"],
+    datasets: [{ data: [24, 24, 66], backgroundColor: ['#a78bfa','#4ade80','#38bdf8','#f472b6'] }]
+  },
+  options: { responsive: true, plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 } } } } }
+});
+
+const siteCtx = document.getElementById('siteChart').getContext('2d');
+new Chart(siteCtx, {
+  type: 'bar',
+  data: {
+    labels: ["JCVN", "治験ジャパン", "ぺいるーと", "ニューイング", "コーメディカルクラブ", "治験バンク", "治験コンシェル", "治験情報V-NET", "ボランティアサーチ", "治験についてのサイト", "SEHMA北陸"],
+    datasets: [{ label: '件数', data: [14, 5, 5, 2, 5, 7, 7, 3, 3, 1, 62], backgroundColor: '#4ade80' }]
+  },
+  options: { indexAxis: 'y', responsive: true, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8', font: { size: 10 } } } }, plugins: { legend: { display: false } } }
+});
+
+// ── Filters ──
+const searchInput = document.getElementById('searchInput');
+const areaFilter = document.getElementById('areaFilter');
+const catFilter = document.getElementById('catFilter');
+const siteFilter = document.getElementById('siteFilter');
+const rows = document.querySelectorAll('.item-row');
+
+function applyFilters() {
+  const q = searchInput.value.toLowerCase();
+  const area = areaFilter.value;
+  const cat = catFilter.value;
+  const site = siteFilter.value;
+  let visible = 0;
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    const matchQ = !q || text.includes(q);
+    const matchArea = !area || row.dataset.area === area;
+    const matchCat = !cat || row.dataset.category === cat;
+    const matchSite = !site || row.dataset.site === site;
+    const show = matchQ && matchArea && matchCat && matchSite;
+    row.classList.toggle('hidden', !show);
+    if (show) visible++;
+  });
+}
+
+searchInput.addEventListener('input', applyFilters);
+areaFilter.addEventListener('change', applyFilters);
+catFilter.addEventListener('change', applyFilters);
+siteFilter.addEventListener('change', applyFilters);
+
+// ── Sort ──
+document.querySelectorAll('thead th').forEach((th, idx) => {
+  th.addEventListener('click', () => {
+    const tbody = document.querySelector('#mainTable tbody');
+    const rowsArr = Array.from(tbody.querySelectorAll('tr'));
+    const asc = th.dataset.sort !== 'asc';
+    th.dataset.sort = asc ? 'asc' : 'desc';
+    rowsArr.sort((a, b) => {
+      const aText = a.children[idx]?.textContent || '';
+      const bText = b.children[idx]?.textContent || '';
+      const aNum = parseFloat(aText.replace(/[^0-9.]/g, ''));
+      const bNum = parseFloat(bText.replace(/[^0-9.]/g, ''));
+      if (!isNaN(aNum) && !isNaN(bNum)) return asc ? aNum - bNum : bNum - aNum;
+      return asc ? aText.localeCompare(bText, 'ja') : bText.localeCompare(aText, 'ja');
+    });
+    rowsArr.forEach(r => tbody.appendChild(r));
+  });
+});
+
+// ═══════════════════════════════════════════
+// PV & Click Tracking (localStorage)
+// ═══════════════════════════════════════════
+(function() {
+  const STORAGE_KEY = 'chiken_tracker';
+  function getData() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { pv: 0, pvHistory: [], clicks: {} }; }
+    catch(e) { return { pv: 0, pvHistory: [], clicks: {} }; }
+  }
+  function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch(e) {} }
+  const data = getData();
+  data.pv = (data.pv || 0) + 1;
+  if (!data.pvHistory) data.pvHistory = [];
+  const today = new Date().toISOString().slice(0, 10);
+  const lastEntry = data.pvHistory[data.pvHistory.length - 1];
+  if (lastEntry && lastEntry.date === today) { lastEntry.count++; }
+  else { data.pvHistory.push({ date: today, count: 1 }); if (data.pvHistory.length > 90) data.pvHistory.shift(); }
+  saveData(data);
+  const kpiPv = document.getElementById('kpiPv');
+  const kpiPvSub = document.getElementById('kpiPvSub');
+  if (kpiPv) kpiPv.textContent = data.pv.toLocaleString();
+  if (kpiPvSub) { const todayPv = data.pvHistory.find(e => e.date === today)?.count || 0; kpiPvSub.textContent = '本日 ' + todayPv + ' PV'; }
+  const totalClicks = Object.values(data.clicks).reduce((s, c) => s + (c.count || 0), 0);
+  const kpiClicks = document.getElementById('kpiClicks');
+  const kpiClicksSub = document.getElementById('kpiClicksSub');
+  if (kpiClicks) kpiClicks.textContent = totalClicks.toLocaleString();
+  if (kpiClicksSub) { const cu = Object.keys(data.clicks).length; const allL = document.querySelectorAll('a[target="_blank"]'); const uu = new Set(); allL.forEach(a => uu.add(a.href)); kpiClicksSub.textContent = cu + '/' + uu.size + ' 件閲覧済'; }
+  function getClickClass(c) { if (c === 0) return 'zero'; if (c <= 2) return 'low'; if (c <= 5) return 'mid'; return 'high'; }
+  function renderBadge(c) { return '<span class="click-count ' + getClickClass(c) + '">' + c + '</span>'; }
+  const mainTable = document.getElementById('mainTable');
+  if (mainTable) { mainTable.querySelectorAll('tbody tr').forEach(row => { const link = row.querySelector('a[target="_blank"]'); const td = document.createElement('td'); td.style.textAlign = 'center'; if (link) { const cd = data.clicks[link.href] || { count: 0 }; td.innerHTML = renderBadge(cd.count); if (cd.count === 0) link.classList.add('unvisited'); } row.appendChild(td); }); }
+  const tl = document.getElementById('timelineSection');
+  if (tl) { const th = document.createElement('th'); th.textContent = '👆'; th.style.textAlign = 'center'; th.style.width = '60px'; th.style.cursor = 'default'; const tlTh = tl.querySelector('thead tr'); if (tlTh) tlTh.appendChild(th); tl.querySelectorAll('.month-header td[colspan]').forEach(td => { td.setAttribute('colspan', parseInt(td.getAttribute('colspan')) + 1); }); tl.querySelectorAll('tbody tr:not(.month-header)').forEach(row => { const link = row.querySelector('a[target="_blank"]'); const td = document.createElement('td'); td.className = 'tl-click-col'; if (link) { const cd = data.clicks[link.href] || { count: 0 }; td.innerHTML = renderBadge(cd.count); if (cd.count === 0) link.classList.add('unvisited'); } row.appendChild(td); }); }
+  document.addEventListener('click', function(e) { const link = e.target.closest('a[target="_blank"]'); if (!link) return; const url = link.href; const d = getData(); if (!d.clicks[url]) d.clicks[url] = { count: 0, first: new Date().toISOString(), last: null }; d.clicks[url].count++; d.clicks[url].last = new Date().toISOString(); saveData(d); link.classList.remove('unvisited'); document.querySelectorAll('a[target="_blank"]').forEach(a => { if (a.href === url) { a.classList.remove('unvisited'); const tr = a.closest('tr'); if (tr) { const ct = tr.querySelector('.click-count')?.parentElement || tr.querySelector('.tl-click-col'); if (ct) ct.innerHTML = renderBadge(d.clicks[url].count); } } }); const tc = Object.values(d.clicks).reduce((s, c) => s + (c.count || 0), 0); const kc = document.getElementById('kpiClicks'); if (kc) kc.textContent = tc.toLocaleString(); const ks = document.getElementById('kpiClicksSub'); if (ks) { const cu2 = Object.keys(d.clicks).length; const allL2 = document.querySelectorAll('a[target="_blank"]'); const uu2 = new Set(); allL2.forEach(a => uu2.add(a.href)); ks.textContent = cu2 + '/' + uu2.size + ' 件閲覧済'; } });
+})();
+</script>
+</body>
+</html>
