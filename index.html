@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>治験・モニター統合ダッシュボード</title>
+<script src="auth-gate.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -695,7 +697,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
     </div>
     
         <div class="chart-card">
-      <h3>地域別 1泊単価 — 東京 強調</h3>
+      <h3>地域別 1日単価 (実質) — 東京 強調</h3>
       <canvas id="ppnChart"></canvas>
     </div>
     <div class="chart-card">
@@ -861,7 +863,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
             <th>負担軽減費</th>
             <th>入院</th>
             <th>通院</th>
-            <th>1泊単価</th>
+            <th>1日単価</th>
           </tr>
         </thead>
         <tbody>
@@ -876,7 +878,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥229,000</td>
           <td class="nights">6泊</td>
           <td class="visits">3回</td>
-          <td class="ppn">¥38,166</td>
+          <td class="ppn">¥25,444</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-08">
           <td class="date-cell soon">5/8(金)</td>
@@ -886,7 +888,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">6泊</td>
           <td class="visits">3回</td>
-          <td class="ppn">¥48,500</td>
+          <td class="ppn">¥32,333</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-08">
           <td class="date-cell soon">5/8(金)</td>
@@ -896,7 +898,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥229,000</td>
           <td class="nights">6泊</td>
           <td class="visits">3回</td>
-          <td class="ppn">¥38,167</td>
+          <td class="ppn">¥25,444</td>
         </tr>
         <tr data-ttype="入院のみ" data-row-date="2026-05-08">
           <td class="date-cell soon">5/8(金)</td>
@@ -926,7 +928,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥210,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥26,250</td>
+          <td class="ppn">¥23,333</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-09">
           <td class="date-cell soon">5/9(土)</td>
@@ -936,7 +938,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥115,000</td>
           <td class="nights">5泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥23,000</td>
+          <td class="ppn">¥19,166</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-09">
           <td class="date-cell soon">5/9(土)</td>
@@ -946,7 +948,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥103,000</td>
           <td class="nights">4泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥25,750</td>
+          <td class="ppn">¥20,600</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-10">
           <td class="date-cell soon">5/10(日)</td>
@@ -956,7 +958,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥206,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥25,750</td>
+          <td class="ppn">¥22,888</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-10">
           <td class="date-cell soon">5/10(日)</td>
@@ -966,7 +968,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥233,000</td>
           <td class="nights">9泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥25,888</td>
+          <td class="ppn">¥15,533</td>
         </tr>
         <tr data-ttype="入院のみ" data-row-date="2026-05-10">
           <td class="date-cell soon">5/10(日)</td>
@@ -986,7 +988,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥256,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥32,000</td>
+          <td class="ppn">¥28,444</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-11">
           <td class="date-cell soon">5/11(月)</td>
@@ -996,7 +998,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥110,000</td>
           <td class="nights">4泊</td>
           <td class="visits">2回</td>
-          <td class="ppn">¥27,500</td>
+          <td class="ppn">¥18,333</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-12">
           <td class="date-cell soon">5/12(火)</td>
@@ -1006,7 +1008,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-12">
           <td class="date-cell soon">5/12(火)</td>
@@ -1016,7 +1018,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-12">
           <td class="date-cell soon">5/12(火)</td>
@@ -1026,7 +1028,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-12">
           <td class="date-cell soon">5/12(火)</td>
@@ -1036,7 +1038,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">14泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥20,786</td>
+          <td class="ppn">¥19,400</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-12">
           <td class="date-cell soon">5/12(火)</td>
@@ -1046,7 +1048,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">14泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥20,786</td>
+          <td class="ppn">¥19,400</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-13">
           <td class="date-cell soon">5/13(水)</td>
@@ -1056,7 +1058,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥174,000</td>
           <td class="nights">6泊</td>
           <td class="visits">2回</td>
-          <td class="ppn">¥29,000</td>
+          <td class="ppn">¥21,750</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-13">
           <td class="date-cell soon">5/13(水)</td>
@@ -1066,7 +1068,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥233,000</td>
           <td class="nights">9泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥25,888</td>
+          <td class="ppn">¥15,533</td>
         </tr>
         <tr data-ttype="入院のみ" data-row-date="2026-05-13">
           <td class="date-cell soon">5/13(水)</td>
@@ -1086,7 +1088,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥210,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥26,250</td>
+          <td class="ppn">¥23,333</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-14">
           <td class="date-cell soon">5/14(木)</td>
@@ -1096,7 +1098,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥106,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥26,500</td>
         </tr>
         <tr data-ttype="入院のみ" data-row-date="2026-05-14">
           <td class="date-cell soon">5/14(木)</td>
@@ -1106,7 +1108,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥184,000</td>
           <td class="nights">6泊</td>
           <td class="visits">—</td>
-          <td class="ppn">¥30,667</td>
+          <td class="ppn">¥30,666</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-14">
           <td class="date-cell soon">5/14(木)</td>
@@ -1116,7 +1118,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥109,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥36,333</td>
+          <td class="ppn">¥27,250</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-17">
           <td class="date-cell future">5/17(日)</td>
@@ -1126,7 +1128,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥206,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥25,750</td>
+          <td class="ppn">¥22,888</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-18">
           <td class="date-cell future">5/18(月)</td>
@@ -1136,7 +1138,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥400,000</td>
           <td class="nights">6泊</td>
           <td class="visits">4回</td>
-          <td class="ppn">¥66,666</td>
+          <td class="ppn">¥40,000</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-18">
           <td class="date-cell future">5/18(月)</td>
@@ -1146,7 +1148,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥115,000</td>
           <td class="nights">5泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥23,000</td>
+          <td class="ppn">¥19,166</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-18">
           <td class="date-cell future">5/18(月)</td>
@@ -1156,7 +1158,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥196,000</td>
           <td class="nights">9泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥21,778</td>
+          <td class="ppn">¥19,600</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-19">
           <td class="date-cell future">5/19(火)</td>
@@ -1166,7 +1168,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥109,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥36,333</td>
+          <td class="ppn">¥27,250</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-20">
           <td class="date-cell future">5/20(水)</td>
@@ -1176,7 +1178,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥114,000</td>
           <td class="nights">4泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥28,500</td>
+          <td class="ppn">¥22,800</td>
         </tr>
         <tr data-ttype="入院のみ" data-row-date="2026-05-21">
           <td class="date-cell future">5/21(木)</td>
@@ -1206,7 +1208,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥156,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥19,500</td>
+          <td class="ppn">¥17,333</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-26">
           <td class="date-cell future">5/26(火)</td>
@@ -1216,7 +1218,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">14泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥20,786</td>
+          <td class="ppn">¥19,400</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-31">
           <td class="date-cell future">5/31(日)</td>
@@ -1226,7 +1228,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">7泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥41,571</td>
+          <td class="ppn">¥36,375</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-31">
           <td class="date-cell future">5/31(日)</td>
@@ -1236,7 +1238,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥148,000</td>
           <td class="nights">7泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥21,143</td>
+          <td class="ppn">¥18,500</td>
         </tr>
         <tr class="month-header collapsed" id="month-2026-06" style="background:rgba(26,39,68,0.8);" onclick="this.classList.toggle('collapsed');let s=this.nextElementSibling;while(s&&!s.classList.contains('month-header')){s.classList.toggle('hidden');s=s.nextElementSibling;}">
           <td colspan="7"><span class="month-badge">2026年6月</span><span class="month-count">10件</span><span class="month-toggle">▼</span></td>
@@ -1249,7 +1251,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥840,000</td>
           <td class="nights">21泊</td>
           <td class="visits">13回</td>
-          <td class="ppn">¥40,000</td>
+          <td class="ppn">¥24,705</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ" data-row-date="2026-06-03">
           <td class="date-cell future">6/3(水)</td>
@@ -1269,7 +1271,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">7泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥41,571</td>
+          <td class="ppn">¥36,375</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院" data-row-date="2026-06-03">
           <td class="date-cell future">6/3(水)</td>
@@ -1279,7 +1281,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥148,000</td>
           <td class="nights">7泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥21,143</td>
+          <td class="ppn">¥18,500</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ" data-row-date="2026-06-07">
           <td class="date-cell future">6/7(日)</td>
@@ -1299,7 +1301,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥250,000</td>
           <td class="nights">8泊</td>
           <td class="visits">2回</td>
-          <td class="ppn">¥31,250</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院" data-row-date="2026-06-08">
           <td class="date-cell future">6/8(月)</td>
@@ -1309,7 +1311,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥115,000</td>
           <td class="nights">5泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥23,000</td>
+          <td class="ppn">¥19,166</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院" data-row-date="2026-06-08">
           <td class="date-cell future">6/8(月)</td>
@@ -1319,7 +1321,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">5泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥58,200</td>
+          <td class="ppn">¥48,500</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院" data-row-date="2026-06-08">
           <td class="date-cell future">6/8(月)</td>
@@ -1329,7 +1331,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥115,000</td>
           <td class="nights">5泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥23,000</td>
+          <td class="ppn">¥19,166</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ" data-row-date="2026-06-18">
           <td class="date-cell future">6/18(木)</td>
@@ -1352,7 +1354,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr class="month-header collapsed" id="month-undated" style="background:rgba(26,39,68,0.8);" onclick="this.classList.toggle('collapsed');let s=this.nextElementSibling;while(s&&!s.classList.contains('month-header')){s.classList.toggle('hidden');s=s.nextElementSibling;}">
           <td colspan="7"><span class="month-badge past">日付未定</span><span class="month-count">60件</span><span class="month-toggle">▼</span></td>
@@ -1375,7 +1377,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
           <td class="date-cell undated">未定</td>
@@ -1385,7 +1387,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1405,7 +1407,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥410,000</td>
           <td class="nights">12泊</td>
           <td class="visits">4回</td>
-          <td class="ppn">¥34,167</td>
+          <td class="ppn">¥25,625</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
           <td class="date-cell undated">未定</td>
@@ -1415,7 +1417,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥353,000</td>
           <td class="nights">13泊</td>
           <td class="visits">4回</td>
-          <td class="ppn">¥27,153</td>
+          <td class="ppn">¥20,764</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1465,7 +1467,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">—</td>
           <td class="visits">1回</td>
-          <td class="ppn">—</td>
+          <td class="ppn">¥291,000</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1485,7 +1487,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥270,008</td>
           <td class="nights">6泊</td>
           <td class="visits">7回</td>
-          <td class="ppn">¥45,001</td>
+          <td class="ppn">¥20,769</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1515,7 +1517,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥243,000</td>
           <td class="nights">4泊</td>
           <td class="visits">9回</td>
-          <td class="ppn">¥60,750</td>
+          <td class="ppn">¥18,692</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
           <td class="date-cell undated">未定</td>
@@ -1525,7 +1527,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥233,000</td>
           <td class="nights">9泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥25,889</td>
+          <td class="ppn">¥15,533</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1615,7 +1617,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥206,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥25,750</td>
+          <td class="ppn">¥22,888</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1685,7 +1687,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥180,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥60,000</td>
+          <td class="ppn">¥45,000</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
           <td class="date-cell undated">未定</td>
@@ -1695,7 +1697,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥177,000</td>
           <td class="nights">6泊</td>
           <td class="visits">2回</td>
-          <td class="ppn">¥29,500</td>
+          <td class="ppn">¥22,125</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1775,7 +1777,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥138,000</td>
           <td class="nights">3泊</td>
           <td class="visits">4回</td>
-          <td class="ppn">¥46,000</td>
+          <td class="ppn">¥19,714</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1795,7 +1797,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥129,000</td>
           <td class="nights">6泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥21,500</td>
+          <td class="ppn">¥18,428</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
           <td class="date-cell undated">未定</td>
@@ -1805,7 +1807,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥114,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥38,000</td>
+          <td class="ppn">¥28,500</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1845,7 +1847,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥100,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥33,333</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
           <td class="date-cell undated">未定</td>
@@ -1855,7 +1857,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥100,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥33,333</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
           <td class="date-cell undated">未定</td>
@@ -1865,7 +1867,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥100,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥33,333</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
           <td class="date-cell undated">未定</td>
@@ -1875,7 +1877,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥100,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥33,333</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="hidden" data-ttype="不明">
           <td class="date-cell undated">未定</td>
@@ -1895,7 +1897,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥100,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥33,333</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1905,7 +1907,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥68,000</td>
           <td class="nights">3泊</td>
           <td class="visits">—</td>
-          <td class="ppn">¥22,667</td>
+          <td class="ppn">¥22,666</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
           <td class="date-cell undated">未定</td>
@@ -1915,7 +1917,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥60,000</td>
           <td class="nights">3泊</td>
           <td class="visits">3回</td>
-          <td class="ppn">¥20,000</td>
+          <td class="ppn">¥10,000</td>
         </tr>
         <tr class="hidden" data-ttype="通院のみ">
           <td class="date-cell undated">未定</td>
@@ -1935,7 +1937,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥10,000</td>
           <td class="nights">6泊</td>
           <td class="visits">2回</td>
-          <td class="ppn">¥1,667</td>
+          <td class="ppn">¥1,250</td>
         </tr>
         <tr class="hidden" data-ttype="不明">
           <td class="date-cell undated">未定</td>
@@ -1955,7 +1957,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥5,000</td>
           <td class="nights">—</td>
           <td class="visits">1回</td>
-          <td class="ppn">—</td>
+          <td class="ppn">¥5,000</td>
         </tr>
         </tbody>
       </table>
@@ -1995,7 +1997,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <th data-col="4">負担軽減費</th>
           <th data-col="5">入院</th>
           <th data-col="6">通院</th>
-          <th data-col="7">1泊単価</th>
+          <th data-col="7">1日単価</th>
         </tr>
       </thead>
       <tbody>
@@ -2007,7 +2009,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥840,000</td>
           <td class="nights">16泊+3泊+2泊 <span class="sub-count">(3回)</span></td>
           <td class="visits">13回</td>
-          <td class="ppn">¥40,000</td>
+          <td class="ppn">¥24,705</td>
         </tr>
         <tr class="item-row" data-site="JCVN" data-area="東京都" data-ttype="入院のみ">
           <td>2</td>
@@ -2027,7 +2029,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="港区" data-ttype="入院+通院">
           <td>4</td>
@@ -2037,7 +2039,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="港区" data-ttype="入院+通院">
           <td>5</td>
@@ -2047,7 +2049,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="港区" data-ttype="入院+通院">
           <td>6</td>
@@ -2057,7 +2059,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr class="item-row" data-site="治験ジャパン" data-area="港区" data-ttype="入院+通院">
           <td>7</td>
@@ -2067,7 +2069,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr class="item-row" data-site="治験情報V-NET" data-area="東京都" data-ttype="入院+通院">
           <td>8</td>
@@ -2077,7 +2079,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥530,000</td>
           <td class="nights">15泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥25,238</td>
         </tr>
         <tr class="item-row" data-site="ぺいるーと" data-area="不明" data-ttype="入院のみ">
           <td>9</td>
@@ -2097,7 +2099,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥410,000</td>
           <td class="nights">6泊×2回</td>
           <td class="visits">4回</td>
-          <td class="ppn">¥34,167</td>
+          <td class="ppn">¥25,625</td>
         </tr>
         <tr class="item-row" data-site="治験ウェブ" data-area="東京都" data-ttype="入院+通院">
           <td>11</td>
@@ -2107,7 +2109,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥400,000</td>
           <td class="nights">6泊</td>
           <td class="visits">4回</td>
-          <td class="ppn">¥66,666</td>
+          <td class="ppn">¥40,000</td>
         </tr>
         <tr class="item-row" data-site="ぺいるーと" data-area="豊島区" data-ttype="入院+通院">
           <td>12</td>
@@ -2117,7 +2119,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥353,000</td>
           <td class="nights">13泊</td>
           <td class="visits">4回</td>
-          <td class="ppn">¥27,153</td>
+          <td class="ppn">¥20,764</td>
         </tr>
         <tr class="item-row" data-site="ぺいるーと" data-area="札幌市清田区" data-ttype="入院のみ">
           <td>13</td>
@@ -2167,7 +2169,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">14泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥20,786</td>
+          <td class="ppn">¥19,400</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="福岡市" data-ttype="入院+通院">
           <td>18</td>
@@ -2177,7 +2179,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">5泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥58,200</td>
+          <td class="ppn">¥48,500</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="福岡市" data-ttype="入院+通院">
           <td>19</td>
@@ -2187,7 +2189,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">14泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥20,786</td>
+          <td class="ppn">¥19,400</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="港区" data-ttype="通院のみ">
           <td>20</td>
@@ -2197,7 +2199,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">—</td>
           <td class="visits">1回</td>
-          <td class="ppn">—</td>
+          <td class="ppn">¥291,000</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="福岡市" data-ttype="入院+通院">
           <td>21</td>
@@ -2207,7 +2209,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">7泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥41,571</td>
+          <td class="ppn">¥36,375</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="福岡市" data-ttype="入院+通院">
           <td>22</td>
@@ -2217,7 +2219,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">7泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥41,571</td>
+          <td class="ppn">¥36,375</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="福岡市" data-ttype="入院+通院">
           <td>23</td>
@@ -2227,7 +2229,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">3泊+3泊（計6泊） <span class="sub-count">(2回)</span></td>
           <td class="visits">3回</td>
-          <td class="ppn">¥48,500</td>
+          <td class="ppn">¥32,333</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡市" data-ttype="入院+通院">
           <td>24</td>
@@ -2237,7 +2239,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥291,000</td>
           <td class="nights">14泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥20,786</td>
+          <td class="ppn">¥19,400</td>
         </tr>
         <tr class="item-row" data-site="JCVN" data-area="東京都" data-ttype="入院のみ">
           <td>25</td>
@@ -2257,7 +2259,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥270,008</td>
           <td class="nights">3泊×2回</td>
           <td class="visits">7回</td>
-          <td class="ppn">¥45,001</td>
+          <td class="ppn">¥20,769</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡市" data-ttype="入院のみ">
           <td>27</td>
@@ -2297,7 +2299,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥256,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥32,000</td>
+          <td class="ppn">¥28,444</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="台東区" data-ttype="入院+通院">
           <td>31</td>
@@ -2307,7 +2309,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥250,000</td>
           <td class="nights">8泊</td>
           <td class="visits">2回</td>
-          <td class="ppn">¥31,250</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="item-row" data-site="JCVN" data-area="東京都" data-ttype="入院+通院">
           <td>32</td>
@@ -2317,7 +2319,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥243,000</td>
           <td class="nights">2泊×2回</td>
           <td class="visits">9回</td>
-          <td class="ppn">¥60,750</td>
+          <td class="ppn">¥18,692</td>
         </tr>
         <tr class="item-row" data-site="JCVN" data-area="大阪府" data-ttype="入院+通院">
           <td>33</td>
@@ -2327,7 +2329,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥233,000</td>
           <td class="nights">9泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥25,889</td>
+          <td class="ppn">¥15,533</td>
         </tr>
         <tr class="item-row" data-site="治験ウェブ" data-area="大阪府" data-ttype="入院+通院">
           <td>34</td>
@@ -2337,7 +2339,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥233,000</td>
           <td class="nights">9泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥25,888</td>
+          <td class="ppn">¥15,533</td>
         </tr>
         <tr class="item-row" data-site="治験ウェブ" data-area="大阪府" data-ttype="入院+通院">
           <td>35</td>
@@ -2347,7 +2349,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥233,000</td>
           <td class="nights">9泊</td>
           <td class="visits">6回</td>
-          <td class="ppn">¥25,888</td>
+          <td class="ppn">¥15,533</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="福岡市" data-ttype="入院+通院">
           <td>36</td>
@@ -2357,7 +2359,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥229,000</td>
           <td class="nights">3泊+3泊 <span class="sub-count">(2回)</span></td>
           <td class="visits">3回</td>
-          <td class="ppn">¥38,166</td>
+          <td class="ppn">¥25,444</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡市" data-ttype="入院+通院">
           <td>37</td>
@@ -2367,7 +2369,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥229,000</td>
           <td class="nights">3泊×2回</td>
           <td class="visits">3回</td>
-          <td class="ppn">¥38,167</td>
+          <td class="ppn">¥25,444</td>
         </tr>
         <tr class="item-row" data-site="ぺいるーと" data-area="札幌市厚別区" data-ttype="入院のみ">
           <td>38</td>
@@ -2467,7 +2469,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥210,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥26,250</td>
+          <td class="ppn">¥23,333</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="墨田区" data-ttype="入院+通院">
           <td>48</td>
@@ -2477,7 +2479,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥210,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥26,250</td>
+          <td class="ppn">¥23,333</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="福岡市" data-ttype="入院+通院">
           <td>49</td>
@@ -2487,7 +2489,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥206,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥25,750</td>
+          <td class="ppn">¥22,888</td>
         </tr>
         <tr class="item-row" data-site="治験ジャパン" data-area="福岡市" data-ttype="入院+通院">
           <td>50</td>
@@ -2497,7 +2499,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥206,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥25,750</td>
+          <td class="ppn">¥22,888</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡市" data-ttype="入院+通院">
           <td>51</td>
@@ -2507,7 +2509,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥206,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥25,750</td>
+          <td class="ppn">¥22,888</td>
         </tr>
         <tr class="item-row" data-site="治験ジャパン" data-area="不明" data-ttype="入院のみ">
           <td>52</td>
@@ -2537,7 +2539,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥196,000</td>
           <td class="nights">5泊+4泊（計9泊） <span class="sub-count">(2回)</span></td>
           <td class="visits">1回</td>
-          <td class="ppn">¥21,778</td>
+          <td class="ppn">¥19,600</td>
         </tr>
         <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="上尾市" data-ttype="入院のみ">
           <td>55</td>
@@ -2587,7 +2589,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥184,000</td>
           <td class="nights">3泊×2回</td>
           <td class="visits">—</td>
-          <td class="ppn">¥30,667</td>
+          <td class="ppn">¥30,666</td>
         </tr>
         <tr class="item-row" data-site="治験ジャパン" data-area="不明" data-ttype="入院+通院">
           <td>60</td>
@@ -2597,7 +2599,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥180,000</td>
           <td class="nights">3泊×2回</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥60,000</td>
+          <td class="ppn">¥45,000</td>
         </tr>
         <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="墨田区" data-ttype="入院+通院">
           <td>61</td>
@@ -2607,7 +2609,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥177,000</td>
           <td class="nights">3泊×2回</td>
           <td class="visits">2回</td>
-          <td class="ppn">¥29,500</td>
+          <td class="ppn">¥22,125</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="東京都" data-ttype="入院+通院">
           <td>62</td>
@@ -2617,7 +2619,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥174,000</td>
           <td class="nights">3泊×2回</td>
           <td class="visits">2回</td>
-          <td class="ppn">¥29,000</td>
+          <td class="ppn">¥21,750</td>
         </tr>
         <tr class="item-row" data-site="ぺいるーと" data-area="上尾市" data-ttype="入院のみ">
           <td>63</td>
@@ -2667,7 +2669,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥156,000</td>
           <td class="nights">8泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥19,500</td>
+          <td class="ppn">¥17,333</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡市" data-ttype="入院+通院">
           <td>68</td>
@@ -2677,7 +2679,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥148,000</td>
           <td class="nights">7泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥21,143</td>
+          <td class="ppn">¥18,500</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡市" data-ttype="入院+通院">
           <td>69</td>
@@ -2687,7 +2689,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥148,000</td>
           <td class="nights">7泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥21,143</td>
+          <td class="ppn">¥18,500</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="新宿区" data-ttype="入院のみ">
           <td>70</td>
@@ -2747,7 +2749,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥138,000</td>
           <td class="nights">3泊</td>
           <td class="visits">4回</td>
-          <td class="ppn">¥46,000</td>
+          <td class="ppn">¥19,714</td>
         </tr>
         <tr class="item-row" data-site="治験ジャパン" data-area="豊島区" data-ttype="入院のみ">
           <td>76</td>
@@ -2767,7 +2769,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥129,000</td>
           <td class="nights">3泊×2回</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥21,500</td>
+          <td class="ppn">¥18,428</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="墨田区" data-ttype="入院のみ">
           <td>78</td>
@@ -2787,7 +2789,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥115,000</td>
           <td class="nights">5泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥23,000</td>
+          <td class="ppn">¥19,166</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="九州" data-ttype="入院+通院">
           <td>80</td>
@@ -2797,7 +2799,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥115,000</td>
           <td class="nights">5泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥23,000</td>
+          <td class="ppn">¥19,166</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡市" data-ttype="入院+通院">
           <td>81</td>
@@ -2807,7 +2809,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥115,000</td>
           <td class="nights">5泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥23,000</td>
+          <td class="ppn">¥19,166</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡市" data-ttype="入院+通院">
           <td>82</td>
@@ -2817,7 +2819,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥115,000</td>
           <td class="nights">5泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥23,000</td>
+          <td class="ppn">¥19,166</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="墨田区" data-ttype="入院+通院">
           <td>83</td>
@@ -2827,7 +2829,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥114,000</td>
           <td class="nights">4泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥28,500</td>
+          <td class="ppn">¥22,800</td>
         </tr>
         <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="墨田区" data-ttype="入院+通院">
           <td>84</td>
@@ -2837,7 +2839,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥114,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥38,000</td>
+          <td class="ppn">¥28,500</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="奈良市" data-ttype="入院+通院">
           <td>85</td>
@@ -2847,7 +2849,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥110,000</td>
           <td class="nights">4泊</td>
           <td class="visits">2回</td>
-          <td class="ppn">¥27,500</td>
+          <td class="ppn">¥18,333</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="墨田区" data-ttype="入院+通院">
           <td>86</td>
@@ -2857,7 +2859,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥109,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥36,333</td>
+          <td class="ppn">¥27,250</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="墨田区" data-ttype="入院+通院">
           <td>87</td>
@@ -2867,7 +2869,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥109,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥36,333</td>
+          <td class="ppn">¥27,250</td>
         </tr>
         <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="墨田区" data-ttype="入院のみ">
           <td>88</td>
@@ -2887,7 +2889,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥106,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥35,333</td>
+          <td class="ppn">¥26,500</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="横浜市" data-ttype="入院のみ">
           <td>90</td>
@@ -2907,7 +2909,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥103,000</td>
           <td class="nights">2泊×2回</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥25,750</td>
+          <td class="ppn">¥20,600</td>
         </tr>
         <tr class="item-row" data-site="クリニカルボランティアサポート" data-area="横浜市" data-ttype="入院のみ">
           <td>92</td>
@@ -2957,7 +2959,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥100,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥33,333</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="新宿区" data-ttype="入院+通院">
           <td>97</td>
@@ -2967,7 +2969,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥100,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥33,333</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="新宿区" data-ttype="入院+通院">
           <td>98</td>
@@ -2977,7 +2979,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥100,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥33,333</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="item-row" data-site="JCVN" data-area="東京都" data-ttype="入院+通院">
           <td>99</td>
@@ -2987,7 +2989,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥100,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥33,333</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="item-row" data-site="治験情報V-NET" data-area="東京都" data-ttype="不明">
           <td>100</td>
@@ -3007,7 +3009,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥100,000</td>
           <td class="nights">3泊</td>
           <td class="visits">1回</td>
-          <td class="ppn">¥33,333</td>
+          <td class="ppn">¥25,000</td>
         </tr>
         <tr class="item-row" data-site="治験ジャパン" data-area="東京都" data-ttype="入院のみ">
           <td>102</td>
@@ -3017,7 +3019,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥68,000</td>
           <td class="nights">3泊</td>
           <td class="visits">—</td>
-          <td class="ppn">¥22,667</td>
+          <td class="ppn">¥22,666</td>
         </tr>
         <tr class="item-row" data-site="治験情報V-NET" data-area="東京都" data-ttype="入院+通院">
           <td>103</td>
@@ -3027,7 +3029,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥60,000</td>
           <td class="nights">3泊</td>
           <td class="visits">3回</td>
-          <td class="ppn">¥20,000</td>
+          <td class="ppn">¥10,000</td>
         </tr>
         <tr class="item-row" data-site="治験情報V-NET" data-area="東京都" data-ttype="通院のみ">
           <td>104</td>
@@ -3057,7 +3059,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥10,000</td>
           <td class="nights">3泊×2回</td>
           <td class="visits">2回</td>
-          <td class="ppn">¥1,667</td>
+          <td class="ppn">¥1,250</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="大府市" data-ttype="不明">
           <td>107</td>
@@ -3077,7 +3079,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥5,000</td>
           <td class="nights">—</td>
           <td class="visits">1回</td>
-          <td class="ppn">—</td>
+          <td class="ppn">¥5,000</td>
         </tr>
       </tbody>
     </table>
@@ -3113,10 +3115,10 @@ const ppnCtx = document.getElementById('ppnChart').getContext('2d');
 new Chart(ppnCtx, {
   type: 'bar',
   data: {
-    labels: ["北海道 (n=6)", "その他 (n=8)", "関東(その他) (n=16)", "東京 (n=42)", "九州・沖縄 (n=25)", "関西 (n=6)"],
+    labels: ["北海道 (n=6)", "関東(その他) (n=16)", "その他 (n=8)", "東京 (n=44)", "九州・沖縄 (n=25)", "関西 (n=6)"],
     datasets: [{
-      label: '平均 1泊単価',
-      data: [60116, 43729, 38681, 34279, 27743, 27152],
+      label: '実質1日単価 (¥/日)',
+      data: [60000, 34051, 33774, 25522, 23082, 18420],
       backgroundColor: ["#6b8db8", "#6b8db8", "#6b8db8", "#c9a558", "#6b8db8", "#6b8db8"],
       borderColor: ["#93c5fd", "#93c5fd", "#93c5fd", "#f1e4c6", "#93c5fd", "#93c5fd"],
       borderWidth: 1.5, borderRadius: 4
@@ -3130,7 +3132,7 @@ new Chart(ppnCtx, {
     },
     plugins: {
       legend: { display: false },
-      tooltip: { callbacks: { label: function(ctx){ return '¥' + ctx.parsed.x.toLocaleString() + ' / 泊'; } } }
+      tooltip: { callbacks: { label: function(ctx){ return '¥' + ctx.parsed.x.toLocaleString() + ' / 日'; } } }
     }
   }
 });

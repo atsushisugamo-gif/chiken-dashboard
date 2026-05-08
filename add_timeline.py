@@ -309,6 +309,20 @@ def build_outpatient_cell(item):
     return '—'
 
 
+def daily_rate(item):
+    """Daily compensation rate including outpatient visits.
+    rate = compensation / (nights + outpatient_count). More realistic than per-night
+    when trials have many 通院 visits."""
+    n = item.get('total_nights') or item.get('nights') or 0
+    oc = item.get('outpatient_count')
+    if oc is None:
+        oc = extract_outpatient_count(item.get('title',''))
+    comp = item.get('compensation_num', 0) or 0
+    days = (n or 0) + (oc or 0)
+    if days <= 0 or comp <= 0:
+        return 0
+    return comp // days
+
 def trial_type_badges(item):
     """Tiny badges shown next to title. Returns HTML."""
     tt = derive_trial_type(item)
@@ -940,7 +954,7 @@ html_parts = [f'''
             <th>負担軽減費</th>
             <th>入院</th>
             <th>通院</th>
-            <th>1泊単価</th>
+            <th>1日単価</th>
           </tr>
         </thead>
         <tbody>
@@ -976,7 +990,7 @@ def build_row(e, date_html, date_class, hidden=False):
           <td class="comp">{fmt_comp(e['compensation_num'])}</td>
           <td class="nights">{inpatient_cell}</td>
           <td class="visits">{outpatient_cell}</td>
-          <td class="ppn">{fmt_ppn(e['price_per_night'])}</td>
+          <td class="ppn">{fmt_ppn(daily_rate(e))}</td>
         </tr>
 '''
 
@@ -1068,8 +1082,8 @@ if kpi_end in dashboard:
 
 # ──── Add click count header to mainTable ────
 dashboard = dashboard.replace(
-    '<th data-col="7">1泊単価</th>',
-    '<th data-col="7">1泊単価</th>\n          <th data-col="8" style="text-align:center;width:70px;">👆</th>'
+    '<th data-col="7">1日単価</th>',
+    '<th data-col="7">1日単価</th>\n          <th data-col="8" style="text-align:center;width:70px;">👆</th>'
 )
 print("Added click column header to mainTable")
 
@@ -1237,8 +1251,8 @@ for idx, item in enumerate(_items_for_main, 1):
     comp_str = f"¥{comp_num:,}" if comp_num > 0 else "—"
     total_n = item.get('total_nights', 0) or item.get('nights', 0)
     nights_str = f"{total_n}泊" if total_n else "—"
-    ppn = item.get('price_per_night', 0)
-    ppn_str = f"¥{ppn:,}" if ppn else "—"
+    _dr = daily_rate(item)
+    ppn_str = f"¥{_dr:,}" if _dr else "—"
     status = item.get('_status', 'unchanged')
     status_html = status_badge(status)
     
@@ -1296,7 +1310,7 @@ new_main_html = f"""{_tabs_html}<table id="mainTable">
           <th data-col="4">負担軽減費</th>
           <th data-col="5">入院</th>
           <th data-col="6">通院</th>
-          <th data-col="7">1泊単価</th>
+          <th data-col="7">1日単価</th>
         </tr>
       </thead>
       <tbody>
@@ -1638,13 +1652,22 @@ def _region_for_chart(it):
 
 _ppn_by_region = {}
 for _it in items:
-    _ppn = _it.get('price_per_night', 0) or 0
-    if _ppn <= 0:
+    _n = _it.get('total_nights') or _it.get('nights') or 0
+    _oc = _it.get('outpatient_count')
+    if _oc is None:
+        _oc = extract_outpatient_count(_it.get('title',''))
+    _days = (_n or 0) + (_oc or 0)
+    _comp = _it.get('compensation_num', 0) or 0
+    if _days <= 0 or _comp <= 0:
         continue
     _r = _region_for_chart(_it)
-    _ppn_by_region.setdefault(_r, []).append(_ppn)
+    _ppn_by_region.setdefault(_r, {'comp': 0, 'days': 0, 'count': 0})
+    _ppn_by_region[_r]['comp'] += _comp
+    _ppn_by_region[_r]['days'] += _days
+    _ppn_by_region[_r]['count'] += 1
 
-_ppn_avg = [(r, int(sum(v) / len(v)), len(v)) for r, v in _ppn_by_region.items()]
+# Weighted average: total comp / total days. More representative than mean of per-item rates.
+_ppn_avg = [(r, int(v['comp'] / v['days']) if v['days'] > 0 else 0, v['count']) for r, v in _ppn_by_region.items()]
 _ppn_avg = [(r, a, n) for r, a, n in _ppn_avg if n >= 1]
 _ppn_avg.sort(key=lambda x: -x[1])
 
@@ -1655,7 +1678,7 @@ _ppn_colors = ['#c9a558' if r == '東京' else '#6b8db8' for r, _, _ in _ppn_avg
 _ppn_borders = ['#f1e4c6' if r == '東京' else '#93c5fd' for r, _, _ in _ppn_avg]
 
 _ppn_chart_card = """    <div class="chart-card">
-      <h3>地域別 1泊単価 — 東京 強調</h3>
+      <h3>地域別 1日単価 (実質) — 東京 強調</h3>
       <canvas id="ppnChart"></canvas>
     </div>"""
 
@@ -1665,7 +1688,7 @@ new Chart(ppnCtx, {{
   data: {{
     labels: {_json.dumps(_ppn_labels, ensure_ascii=False)},
     datasets: [{{
-      label: '平均 1泊単価',
+      label: '実質1日単価 (¥/日)',
       data: {_json.dumps(_ppn_data)},
       backgroundColor: {_json.dumps(_ppn_colors)},
       borderColor: {_json.dumps(_ppn_borders)},
@@ -1680,7 +1703,7 @@ new Chart(ppnCtx, {{
     }},
     plugins: {{
       legend: {{ display: false }},
-      tooltip: {{ callbacks: {{ label: function(ctx){{ return '¥' + ctx.parsed.x.toLocaleString() + ' / 泊'; }} }} }}
+      tooltip: {{ callbacks: {{ label: function(ctx){{ return '¥' + ctx.parsed.x.toLocaleString() + ' / 日'; }} }} }}
     }}
   }}
 }});"""
@@ -1693,6 +1716,17 @@ dashboard = dashboard.replace("const siteCtx = document.getElementById('siteChar
                               _ppn_chart_js + "\n\nconst siteCtx = document.getElementById('siteChart')", 1)
 
 print(f"Added PPN chart with {len(_ppn_avg)} regions: {[r for r,_,_ in _ppn_avg]}")
+
+# ──────────────────────── 簡易閲覧パスワードゲート (Plan B) ────────────────────────
+# 同フォルダの auth-gate.js を読み込ませる <script> タグを <head> に注入。
+# パスワード本体は auth-gate.js の AUTH_PASSWORD で管理する（ここでは扱わない）。
+_AUTH_GATE_TAG = '<script src="auth-gate.js"></script>\n'
+if _AUTH_GATE_TAG.strip() not in dashboard:
+    if '</title>' in dashboard:
+        dashboard = dashboard.replace('</title>', '</title>\n' + _AUTH_GATE_TAG, 1)
+        print("Injected auth-gate.js <script> tag after <title>")
+    else:
+        print("WARNING: <title> not found, auth-gate.js was not injected")
 
 # ──────────────────────── Write outputs ────────────────────────
 with open(OUT_DASHBOARD, 'w') as f:
