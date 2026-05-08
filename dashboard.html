@@ -302,6 +302,9 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
 .chart-card canvas { max-height: 280px; }
 
 
+td.visits { color: #e0bb73; font-variant-numeric: tabular-nums; font-size: 0.82rem; }
+.sub-count { color: #a8b8d0; opacity: 0.7; font-size: 0.78rem; margin-left: 3px; }
+
 </style>
 </head>
 <body>
@@ -384,7 +387,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
             <th>掲載サイト</th>
             <th>地域</th>
             <th>負担軽減費</th>
-            <th>構成</th>
+            <th>入院</th>
+            <th>通院</th>
             <th>1泊単価</th>
           </tr>
         </thead>
@@ -398,7 +402,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥229,000</td>
-          <td class="nights">6泊+通院3回</td>
+          <td class="nights">6泊</td>
+          <td class="visits">3回</td>
           <td class="ppn">¥38,166</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -407,7 +412,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">6泊+通院3回</td>
+          <td class="nights">6泊</td>
+          <td class="visits">3回</td>
           <td class="ppn">¥48,500</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -416,7 +422,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥229,000</td>
-          <td class="nights">6泊+通院3回</td>
+          <td class="nights">6泊</td>
+          <td class="visits">3回</td>
           <td class="ppn">¥38,167</td>
         </tr>
         <tr data-ttype="入院のみ">
@@ -426,6 +433,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥127,000</td>
           <td class="nights">4泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥31,750</td>
         </tr>
         <tr data-ttype="入院のみ">
@@ -435,6 +443,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥25,000</td>
           <td class="nights">1泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥25,000</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -443,7 +452,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥210,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥26,250</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -452,7 +462,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥115,000</td>
-          <td class="nights">5泊+通院1回</td>
+          <td class="nights">5泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥23,000</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -461,7 +472,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">熊本県</span></td>
           <td class="comp">¥103,000</td>
-          <td class="nights">4泊+通院1回</td>
+          <td class="nights">4泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥25,750</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -470,7 +482,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥206,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥25,750</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -479,7 +492,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ウェブ</span></td>
           <td><span class="badge badge-area">大阪府</span></td>
           <td class="comp">¥233,000</td>
-          <td class="nights">9泊+通院6回</td>
+          <td class="nights">9泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥25,888</td>
         </tr>
         <tr data-ttype="入院のみ">
@@ -489,6 +503,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥266,000</td>
           <td class="nights">14泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥19,000</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -497,7 +512,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥256,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥32,000</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -506,7 +522,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥110,000</td>
-          <td class="nights">4泊+通院2回</td>
+          <td class="nights">4泊</td>
+          <td class="visits">2回</td>
           <td class="ppn">¥27,500</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -515,7 +532,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">登場★港区</span></td>
           <td class="comp">¥530,000</td>
-          <td class="nights">15泊+通院6回</td>
+          <td class="nights">15泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥35,333</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -524,7 +542,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">ずか★港区</span></td>
           <td class="comp">¥530,000</td>
-          <td class="nights">15泊+通院6回</td>
+          <td class="nights">15泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥35,333</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -533,7 +552,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">港区</span></td>
           <td class="comp">¥530,000</td>
-          <td class="nights">15泊+通院6回</td>
+          <td class="nights">15泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥35,333</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -542,7 +562,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">14泊+通院1回</td>
+          <td class="nights">14泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥20,786</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -551,7 +572,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">14泊+通院1回</td>
+          <td class="nights">14泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥20,786</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -560,7 +582,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥174,000</td>
-          <td class="nights">6泊+通院2回</td>
+          <td class="nights">6泊</td>
+          <td class="visits">2回</td>
           <td class="ppn">¥29,000</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -569,7 +592,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ウェブ</span></td>
           <td><span class="badge badge-area">大阪府</span></td>
           <td class="comp">¥233,000</td>
-          <td class="nights">9泊+通院6回</td>
+          <td class="nights">9泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥25,888</td>
         </tr>
         <tr data-ttype="入院のみ">
@@ -579,6 +603,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥220,000</td>
           <td class="nights">8泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥27,500</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -587,7 +612,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥210,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥26,250</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -596,7 +622,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥106,000</td>
-          <td class="nights">3泊+通院1回</td>
+          <td class="nights">3泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥35,333</td>
         </tr>
         <tr data-ttype="入院のみ">
@@ -606,6 +633,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">熊本県</span></td>
           <td class="comp">¥184,000</td>
           <td class="nights">6泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥30,667</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -614,7 +642,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥109,000</td>
-          <td class="nights">3泊+通院1回</td>
+          <td class="nights">3泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥36,333</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -623,7 +652,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥206,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥25,750</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -632,7 +662,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ウェブ</span></td>
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥400,000</td>
-          <td class="nights">6泊+通院4回</td>
+          <td class="nights">6泊</td>
+          <td class="visits">4回</td>
           <td class="ppn">¥66,666</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -641,7 +672,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥115,000</td>
-          <td class="nights">5泊+通院1回</td>
+          <td class="nights">5泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥23,000</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -650,7 +682,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥196,000</td>
-          <td class="nights">9泊+通院1回</td>
+          <td class="nights">9泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥21,778</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -659,7 +692,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥109,000</td>
-          <td class="nights">3泊+通院1回</td>
+          <td class="nights">3泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥36,333</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -668,7 +702,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥114,000</td>
-          <td class="nights">4泊+通院1回</td>
+          <td class="nights">4泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥28,500</td>
         </tr>
         <tr data-ttype="入院のみ">
@@ -678,6 +713,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥100,000</td>
           <td class="nights">4泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥25,000</td>
         </tr>
         <tr data-ttype="入院のみ">
@@ -687,6 +723,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥100,000</td>
           <td class="nights">4泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥25,000</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -695,7 +732,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥156,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥19,500</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -704,7 +742,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">14泊+通院1回</td>
+          <td class="nights">14泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥20,786</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -713,7 +752,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">7泊+通院1回</td>
+          <td class="nights">7泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥41,571</td>
         </tr>
         <tr data-ttype="入院+通院">
@@ -722,7 +762,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥148,000</td>
-          <td class="nights">7泊+通院1回</td>
+          <td class="nights">7泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥21,143</td>
         </tr>
         <tr class="month-header collapsed" id="month-1" style="background:rgba(26,39,68,0.8);" onclick="this.classList.toggle('collapsed');let s=this.nextElementSibling;while(s&&!s.classList.contains('month-header')){s.classList.toggle('hidden');s=s.nextElementSibling;}">
@@ -734,7 +775,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">港区</span></td>
           <td class="comp">¥840,000</td>
-          <td class="nights">21泊+通院13回</td>
+          <td class="nights">21泊</td>
+          <td class="visits">13回</td>
           <td class="ppn">¥40,000</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
@@ -744,6 +786,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥160,000</td>
           <td class="nights">8泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥20,000</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
@@ -752,7 +795,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">7泊+通院1回</td>
+          <td class="nights">7泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥41,571</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
@@ -761,7 +805,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥148,000</td>
-          <td class="nights">7泊+通院1回</td>
+          <td class="nights">7泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥21,143</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
@@ -771,6 +816,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">神奈川県</span></td>
           <td class="comp">¥103,000</td>
           <td class="nights">2泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥51,500</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
@@ -779,7 +825,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥250,000</td>
-          <td class="nights">8泊+通院2回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">2回</td>
           <td class="ppn">¥31,250</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
@@ -788,7 +835,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥115,000</td>
-          <td class="nights">5泊+通院1回</td>
+          <td class="nights">5泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥23,000</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
@@ -797,7 +845,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">5泊+通院1回</td>
+          <td class="nights">5泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥58,200</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
@@ -806,7 +855,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥115,000</td>
-          <td class="nights">5泊+通院1回</td>
+          <td class="nights">5泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥23,000</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
@@ -816,6 +866,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥160,000</td>
           <td class="nights">8泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥20,000</td>
         </tr>
         <tr class="month-header collapsed" id="month-2" style="background:rgba(26,39,68,0.8);" onclick="this.classList.toggle('collapsed');let s=this.nextElementSibling;while(s&&!s.classList.contains('month-header')){s.classList.toggle('hidden');s=s.nextElementSibling;}">
@@ -827,7 +878,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">港区</span></td>
           <td class="comp">¥530,000</td>
-          <td class="nights">15泊+通院6回</td>
+          <td class="nights">15泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥35,333</td>
         </tr>
         </tbody>
@@ -866,8 +918,9 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <th data-col="2">サイト</th>
           <th data-col="3">地域</th>
           <th data-col="4">負担軽減費</th>
-          <th data-col="5">構成</th>
-          <th data-col="6">1泊単価</th>
+          <th data-col="5">入院</th>
+          <th data-col="6">通院</th>
+          <th data-col="7">1泊単価</th>
         </tr>
       </thead>
       <tbody>
@@ -877,7 +930,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥229,000</td>
-          <td class="nights">6泊+通院3回</td>
+          <td class="nights">3泊+3泊 <span class="sub-count">(2回)</span></td>
+          <td class="visits">3回</td>
           <td class="ppn">¥38,166</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="不明" data-ttype="入院+通院">
@@ -886,7 +940,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥250,000</td>
-          <td class="nights">8泊+通院2回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">2回</td>
           <td class="ppn">¥31,250</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="登場★港区" data-ttype="入院+通院">
@@ -895,7 +950,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">登場★港区</span></td>
           <td class="comp">¥530,000</td>
-          <td class="nights">15泊+通院6回</td>
+          <td class="nights">15泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥35,333</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="不明" data-ttype="入院のみ">
@@ -905,6 +961,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥100,000</td>
           <td class="nights">4泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥25,000</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="東京都" data-ttype="入院+通院">
@@ -913,7 +970,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥106,000</td>
-          <td class="nights">3泊+通院1回</td>
+          <td class="nights">3泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥35,333</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="ずか★港区" data-ttype="入院+通院">
@@ -922,7 +980,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">ずか★港区</span></td>
           <td class="comp">¥530,000</td>
-          <td class="nights">15泊+通院6回</td>
+          <td class="nights">15泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥35,333</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="不明" data-ttype="入院+通院">
@@ -931,7 +990,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥206,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥25,750</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="不明" data-ttype="入院のみ">
@@ -941,6 +1001,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥100,000</td>
           <td class="nights">4泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥25,000</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="不明" data-ttype="入院+通院">
@@ -949,7 +1010,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥110,000</td>
-          <td class="nights">4泊+通院2回</td>
+          <td class="nights">4泊</td>
+          <td class="visits">2回</td>
           <td class="ppn">¥27,500</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="港区" data-ttype="入院+通院">
@@ -958,7 +1020,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">港区</span></td>
           <td class="comp">¥840,000</td>
-          <td class="nights">21泊+通院13回</td>
+          <td class="nights">16泊+3泊+2泊 <span class="sub-count">(3回)</span></td>
+          <td class="visits">13回</td>
           <td class="ppn">¥40,000</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="港区" data-ttype="入院+通院">
@@ -967,7 +1030,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">港区</span></td>
           <td class="comp">¥530,000</td>
-          <td class="nights">15泊+通院6回</td>
+          <td class="nights">15泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥35,333</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="港区" data-ttype="入院+通院">
@@ -976,7 +1040,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">港区</span></td>
           <td class="comp">¥530,000</td>
-          <td class="nights">15泊+通院6回</td>
+          <td class="nights">15泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥35,333</td>
         </tr>
         <tr class="item-row" data-site="生活向上WEB" data-area="東京都" data-ttype="入院+通院">
@@ -985,7 +1050,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">生活向上WEB</span></td>
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥174,000</td>
-          <td class="nights">6泊+通院2回</td>
+          <td class="nights">3泊×2回</td>
+          <td class="visits">2回</td>
           <td class="ppn">¥29,000</td>
         </tr>
         <tr class="item-row" data-site="治験ウェブ" data-area="東京都" data-ttype="入院+通院">
@@ -994,7 +1060,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ウェブ</span></td>
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥400,000</td>
-          <td class="nights">6泊+通院4回</td>
+          <td class="nights">6泊</td>
+          <td class="visits">4回</td>
           <td class="ppn">¥66,666</td>
         </tr>
         <tr class="item-row" data-site="治験ウェブ" data-area="大阪府" data-ttype="入院+通院">
@@ -1003,7 +1070,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ウェブ</span></td>
           <td><span class="badge badge-area">大阪府</span></td>
           <td class="comp">¥233,000</td>
-          <td class="nights">9泊+通院6回</td>
+          <td class="nights">9泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥25,888</td>
         </tr>
         <tr class="item-row" data-site="治験ウェブ" data-area="大阪府" data-ttype="入院+通院">
@@ -1012,7 +1080,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ウェブ</span></td>
           <td><span class="badge badge-area">大阪府</span></td>
           <td class="comp">¥233,000</td>
-          <td class="nights">9泊+通院6回</td>
+          <td class="nights">9泊</td>
+          <td class="visits">6回</td>
           <td class="ppn">¥25,888</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="不明" data-ttype="入院+通院">
@@ -1021,7 +1090,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥115,000</td>
-          <td class="nights">5泊+通院1回</td>
+          <td class="nights">5泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥23,000</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="不明" data-ttype="入院+通院">
@@ -1030,7 +1100,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥115,000</td>
-          <td class="nights">5泊+通院1回</td>
+          <td class="nights">5泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥23,000</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="不明" data-ttype="入院のみ">
@@ -1040,6 +1111,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥160,000</td>
           <td class="nights">8泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥20,000</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="不明" data-ttype="入院のみ">
@@ -1049,6 +1121,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">不明</span></td>
           <td class="comp">¥160,000</td>
           <td class="nights">8泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥20,000</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市" data-ttype="入院+通院">
@@ -1057,7 +1130,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">14泊+通院1回</td>
+          <td class="nights">14泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥20,786</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市" data-ttype="入院+通院">
@@ -1066,7 +1140,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">5泊+通院1回</td>
+          <td class="nights">5泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥58,200</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市" data-ttype="入院+通院">
@@ -1075,7 +1150,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">14泊+通院1回</td>
+          <td class="nights">14泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥20,786</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市" data-ttype="入院+通院">
@@ -1084,7 +1160,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">7泊+通院1回</td>
+          <td class="nights">7泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥41,571</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市" data-ttype="入院+通院">
@@ -1093,7 +1170,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">7泊+通院1回</td>
+          <td class="nights">7泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥41,571</td>
         </tr>
         <tr class="item-row" data-site="治験バンク" data-area="福岡県福岡市" data-ttype="入院+通院">
@@ -1102,7 +1180,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験バンク</span></td>
           <td><span class="badge badge-area">福岡県福岡市</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">6泊+通院3回</td>
+          <td class="nights">3泊+3泊（計6泊） <span class="sub-count">(2回)</span></td>
+          <td class="visits">3回</td>
           <td class="ppn">¥48,500</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡県" data-ttype="入院+通院">
@@ -1111,7 +1190,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥291,000</td>
-          <td class="nights">14泊+通院1回</td>
+          <td class="nights">14泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥20,786</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡県" data-ttype="入院のみ">
@@ -1120,7 +1200,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥266,000</td>
-          <td class="nights">14泊</td>
+          <td class="nights">7泊×2回</td>
+          <td class="visits">—</td>
           <td class="ppn">¥19,000</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡県" data-ttype="入院+通院">
@@ -1129,7 +1210,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥256,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥32,000</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡県" data-ttype="入院+通院">
@@ -1138,7 +1220,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥229,000</td>
-          <td class="nights">6泊+通院3回</td>
+          <td class="nights">3泊×2回</td>
+          <td class="visits">3回</td>
           <td class="ppn">¥38,167</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="東京都" data-ttype="入院のみ">
@@ -1147,7 +1230,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥220,000</td>
-          <td class="nights">8泊</td>
+          <td class="nights">4泊×2回</td>
+          <td class="visits">—</td>
           <td class="ppn">¥27,500</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区" data-ttype="入院+通院">
@@ -1156,7 +1240,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥210,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥26,250</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区" data-ttype="入院+通院">
@@ -1165,7 +1250,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥210,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥26,250</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡県" data-ttype="入院+通院">
@@ -1174,7 +1260,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥206,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥25,750</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡県" data-ttype="入院+通院">
@@ -1183,7 +1270,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥196,000</td>
-          <td class="nights">9泊+通院1回</td>
+          <td class="nights">5泊+4泊（計9泊） <span class="sub-count">(2回)</span></td>
+          <td class="visits">1回</td>
           <td class="ppn">¥21,778</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="熊本県" data-ttype="入院のみ">
@@ -1192,7 +1280,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">熊本県</span></td>
           <td class="comp">¥184,000</td>
-          <td class="nights">6泊</td>
+          <td class="nights">3泊×2回</td>
+          <td class="visits">—</td>
           <td class="ppn">¥30,667</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡県" data-ttype="入院+通院">
@@ -1201,7 +1290,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥156,000</td>
-          <td class="nights">8泊+通院1回</td>
+          <td class="nights">8泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥19,500</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡県" data-ttype="入院+通院">
@@ -1210,7 +1300,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥148,000</td>
-          <td class="nights">7泊+通院1回</td>
+          <td class="nights">7泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥21,143</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡県" data-ttype="入院+通院">
@@ -1219,7 +1310,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥148,000</td>
-          <td class="nights">7泊+通院1回</td>
+          <td class="nights">7泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥21,143</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区" data-ttype="入院のみ">
@@ -1228,7 +1320,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥127,000</td>
-          <td class="nights">4泊</td>
+          <td class="nights">2泊×2回</td>
+          <td class="visits">—</td>
           <td class="ppn">¥31,750</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡県" data-ttype="入院+通院">
@@ -1237,7 +1330,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥115,000</td>
-          <td class="nights">5泊+通院1回</td>
+          <td class="nights">5泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥23,000</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="福岡県" data-ttype="入院+通院">
@@ -1246,7 +1340,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">福岡県</span></td>
           <td class="comp">¥115,000</td>
-          <td class="nights">5泊+通院1回</td>
+          <td class="nights">5泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥23,000</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区" data-ttype="入院+通院">
@@ -1255,7 +1350,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥114,000</td>
-          <td class="nights">4泊+通院1回</td>
+          <td class="nights">4泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥28,500</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区" data-ttype="入院+通院">
@@ -1264,7 +1360,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥109,000</td>
-          <td class="nights">3泊+通院1回</td>
+          <td class="nights">3泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥36,333</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="東京都墨田区" data-ttype="入院+通院">
@@ -1273,7 +1370,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">東京都墨田区</span></td>
           <td class="comp">¥109,000</td>
-          <td class="nights">3泊+通院1回</td>
+          <td class="nights">3泊</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥36,333</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="神奈川県" data-ttype="入院のみ">
@@ -1282,7 +1380,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">神奈川県</span></td>
           <td class="comp">¥103,000</td>
-          <td class="nights">2泊</td>
+          <td class="nights">2泊×2回</td>
+          <td class="visits">—</td>
           <td class="ppn">¥51,500</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="熊本県" data-ttype="入院+通院">
@@ -1291,7 +1390,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-site">治験ネット</span></td>
           <td><span class="badge badge-area">熊本県</span></td>
           <td class="comp">¥103,000</td>
-          <td class="nights">4泊+通院1回</td>
+          <td class="nights">2泊×2回</td>
+          <td class="visits">1回</td>
           <td class="ppn">¥25,750</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="東京都" data-ttype="入院のみ">
@@ -1301,6 +1401,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥25,000</td>
           <td class="nights">1泊</td>
+          <td class="visits">—</td>
           <td class="ppn">¥25,000</td>
         </tr>
       </tbody>

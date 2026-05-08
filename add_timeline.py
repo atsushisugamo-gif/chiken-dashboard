@@ -126,7 +126,7 @@ def derive_trial_type(item):
     return '不明'
 
 def build_composition_str(item):
-    """Build display string like '5泊' / '3泊+通院1回' / '通院2回'."""
+    """Build display string like '5泊' / '3泊+通院1回' / '通院2回' (legacy single-cell)."""
     n = item.get('total_nights') or item.get('nights') or 0
     oc = item.get('outpatient_count')
     if oc is None:
@@ -137,6 +137,49 @@ def build_composition_str(item):
     if oc: parts.append(f'通院{oc}回')
     elif has_out: parts.append('通院あり')
     return '+'.join(parts) if parts else '—'
+
+def extract_admission_count(title):
+    """Count distinct inpatient sessions from title.
+    '3泊+3泊' -> 2, '4泊×2回' -> 2, '15泊' -> 1, '通院のみ' -> 0."""
+    if not title:
+        return 0
+    count = 0
+    # Multiplied form: N泊×M回 (counts as M sessions)
+    for m in re.finditer(r'\d+泊\s*[×xX]\s*(\d+)', title):
+        count += int(m.group(1))
+    cleaned = re.sub(r'\d+泊\s*[×xX]\s*\d+\s*回?', '', title)
+    # Standalone N泊 (each = 1 session)
+    standalone = re.findall(r'\d+泊', cleaned)
+    count += len(standalone)
+    return count
+
+def build_inpatient_cell(item):
+    """Display content for inpatient column. Shows e.g. '6泊', '3泊+3泊', '4泊×2回 (8泊)', or '—'."""
+    title = item.get('title', '') or ''
+    n = item.get('total_nights') or item.get('nights') or 0
+    if not n:
+        return '—'
+    nd = item.get('nights_desc')
+    if nd:
+        # nights_desc already shows pattern like '3泊+3泊' or '4泊×2回'
+        admissions = extract_admission_count(title)
+        if admissions > 1 and 'x' not in nd.lower() and '×' not in nd:
+            return f'{nd} <span class="sub-count">({admissions}回)</span>'
+        return nd
+    return f'{n}泊'
+
+def build_outpatient_cell(item):
+    """Display content for outpatient column."""
+    oc = item.get('outpatient_count')
+    if oc is None:
+        oc = extract_outpatient_count(item.get('title', ''))
+    has_out = bool(item.get('has_outpatient')) or has_outpatient_in_title(item.get('title', ''))
+    if oc and oc > 0:
+        return f'{oc}回'
+    if has_out:
+        return 'あり'
+    return '—'
+
 
 def trial_type_badges(item):
     """Tiny badges shown next to title. Returns HTML."""
@@ -525,6 +568,9 @@ td.date-cell.undated { color: #6b7c93; font-style: italic; opacity: 0.6; }
 /* ── Charts canvas containment ── */
 .chart-card canvas { max-height: 280px; }
 
+
+td.visits { color: #e0bb73; font-variant-numeric: tabular-nums; font-size: 0.82rem; }
+.sub-count { color: #a8b8d0; opacity: 0.7; font-size: 0.78rem; margin-left: 3px; }
 '''
 
 # ──────────────────────── Build timeline HTML ────────────────────────
@@ -601,7 +647,8 @@ html_parts = [f'''
             <th>掲載サイト</th>
             <th>地域</th>
             <th>負担軽減費</th>
-            <th>構成</th>
+            <th>入院</th>
+            <th>通院</th>
             <th>1泊単価</th>
           </tr>
         </thead>
@@ -625,7 +672,8 @@ def build_row(e, date_html, date_class, hidden=False):
     else:
         sites_html = f'<span class="badge badge-site">{esc(e["site"])}</span>'
 
-    composition = build_composition_str(e)
+    inpatient_cell = build_inpatient_cell(e)
+    outpatient_cell = build_outpatient_cell(e)
 
     return f'''        <tr{row_class} data-ttype="{ttype}">
           <td class="{date_class}">{date_html}</td>
@@ -633,7 +681,8 @@ def build_row(e, date_html, date_class, hidden=False):
           <td>{sites_html}</td>
           <td><span class="badge badge-area">{esc(e['prefecture'])}</span></td>
           <td class="comp">{fmt_comp(e['compensation_num'])}</td>
-          <td class="nights">{composition}</td>
+          <td class="nights">{inpatient_cell}</td>
+          <td class="visits">{outpatient_cell}</td>
           <td class="ppn">{fmt_ppn(e['price_per_night'])}</td>
         </tr>
 '''
@@ -725,8 +774,8 @@ if kpi_end in dashboard:
 
 # ──── Add click count header to mainTable ────
 dashboard = dashboard.replace(
-    '<th data-col="6">1泊単価</th>',
-    '<th data-col="6">1泊単価</th>\n          <th data-col="7" style="text-align:center;width:70px;">👆</th>'
+    '<th data-col="7">1泊単価</th>',
+    '<th data-col="7">1泊単価</th>\n          <th data-col="8" style="text-align:center;width:70px;">👆</th>'
 )
 print("Added click column header to mainTable")
 
@@ -863,7 +912,8 @@ for idx, item in enumerate(items, 1):
     # Trial type info (uses fields if present, else derives from title)
     _ttype = derive_trial_type(item)
     _badges = trial_type_badges(item)
-    _composition = build_composition_str(item)
+    _inpatient = build_inpatient_cell(item)
+    _outpatient = build_outpatient_cell(item)
 
     main_rows.append(f"""        <tr class="{row_class}" data-site="{site}" data-area="{prefecture}" data-ttype="{_ttype}">
           <td>{idx}</td>
@@ -871,7 +921,8 @@ for idx, item in enumerate(items, 1):
           <td>{sites_html}</td>
           <td><span class="badge badge-area">{prefecture}</span></td>
           <td class="comp">{comp_str}</td>
-          <td class="nights">{_composition}</td>
+          <td class="nights">{_inpatient}</td>
+          <td class="visits">{_outpatient}</td>
           <td class="ppn">{ppn_str}</td>
         </tr>""")
 
@@ -898,8 +949,9 @@ new_main_html = f"""{_tabs_html}<table id="mainTable">
           <th data-col="2">サイト</th>
           <th data-col="3">地域</th>
           <th data-col="4">負担軽減費</th>
-          <th data-col="5">構成</th>
-          <th data-col="6">1泊単価</th>
+          <th data-col="5">入院</th>
+          <th data-col="6">通院</th>
+          <th data-col="7">1泊単価</th>
         </tr>
       </thead>
       <tbody>
