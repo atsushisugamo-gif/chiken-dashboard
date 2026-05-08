@@ -453,7 +453,6 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
     <div class="kpi"><div class="label">対象サイト</div><div class="value green">10</div></div>
     <div class="kpi"><div class="label">平均負担軽減費</div><div class="value orange">214,205円</div></div>
     <div class="kpi"><div class="label">最高負担軽減費</div><div class="value orange">840,000円</div></div>
-    <div class="kpi"><div class="label">定員合計 (判明分)</div><div class="value purple">0名</div></div>
     <div class="kpi"><div class="label">対象地域数</div><div class="value purple">6</div></div>
   </div>
 
@@ -695,6 +694,10 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
       <canvas id="compChart"></canvas>
     </div>
     
+        <div class="chart-card">
+      <h3>地域別 1泊単価 — 東京 強調</h3>
+      <canvas id="ppnChart"></canvas>
+    </div>
     <div class="chart-card">
       <h3>サイト別 案件数</h3>
       <canvas id="siteChart"></canvas>
@@ -3105,6 +3108,32 @@ new Chart(compCtx, {
 });
 
 
+
+const ppnCtx = document.getElementById('ppnChart').getContext('2d');
+new Chart(ppnCtx, {
+  type: 'bar',
+  data: {
+    labels: ["北海道 (n=6)", "その他 (n=8)", "関東(その他) (n=16)", "東京 (n=42)", "九州・沖縄 (n=25)", "関西 (n=6)"],
+    datasets: [{
+      label: '平均 1泊単価',
+      data: [60116, 43729, 38681, 34279, 27743, 27152],
+      backgroundColor: ["#6b8db8", "#6b8db8", "#6b8db8", "#c9a558", "#6b8db8", "#6b8db8"],
+      borderColor: ["#93c5fd", "#93c5fd", "#93c5fd", "#f1e4c6", "#93c5fd", "#93c5fd"],
+      borderWidth: 1.5, borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true,
+    scales: {
+      x: { ticks: { color: '#a8b8d0', callback: function(v){ return '¥' + v.toLocaleString(); } }, grid: { color: 'rgba(201,165,88,0.08)' } },
+      y: { ticks: { color: '#e9d9b8', font: { size: 11 } }, grid: { display: false } }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: function(ctx){ return '¥' + ctx.parsed.x.toLocaleString() + ' / 泊'; } } }
+    }
+  }
+});
 
 const siteCtx = document.getElementById('siteChart').getContext('2d');
 new Chart(siteCtx, {

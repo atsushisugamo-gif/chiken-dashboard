@@ -1304,6 +1304,13 @@ new_main_html = f"""{_tabs_html}<table id="mainTable">
       </tbody>
     </table>"""
 
+# Remove 定員合計 KPI card (no useful data; user asked to remove)
+import re as _rerm
+dashboard = _rerm.sub(
+    r'<div class="kpi"><div class="label">定員合計[^<]*</div><div class="value[^"]*"[^>]*>[^<]*</div></div>\s*',
+    '', dashboard)
+print('Removed 定員合計 KPI')
+
 # Replace existing mainTable in dashboard HTML
 main_table_re = re_mod.compile(r'<table[^>]*id="mainTable".*?</table>', re_mod.DOTALL)
 if main_table_re.search(dashboard):
@@ -1602,6 +1609,90 @@ _arch_html = """<div class="arch-section">
 # Architecture diagram is now a separate file (architecture.html / architecture.png)
 # (intentionally NOT injecting into dashboard)
 print("Architecture: separate file (skipped dashboard injection)")
+
+
+# ──────────────────────── 地域別 1泊単価 (added) ────────────────────────
+def _region_for_chart(it):
+    """Bucket items into chart regions, splitting 東京 out from rest of 関東."""
+    pref = (it.get('prefecture') or '') or ''
+    title = (it.get('title') or '') or ''
+    text = pref + ' ' + title
+    # Tokyo first (highlighted)
+    if any(k in text for k in ('東京', '墨田', '新宿', '渋谷', '港区', '台東', '豊島', '品川', '浅草', '池袋', '上野', '都内')):
+        return '東京'
+    if any(k in text for k in ('神奈川', '横浜', '川崎', '埼玉', '上尾', '越谷', '千葉', '茨城', '栃木', '群馬', '関東')):
+        return '関東(その他)'
+    if any(k in text for k in ('大阪', '京都', '神戸', '兵庫', '奈良', '滋賀', '和歌山', '関西')):
+        return '関西'
+    if any(k in text for k in ('福岡', '熊本', '鹿児島', '長崎', '佐賀', '大分', '宮崎', '沖縄', '九州')):
+        return '九州・沖縄'
+    if any(k in text for k in ('愛知', '名古屋', '静岡', '岐阜', '三重', '新潟', '富山', '石川', '福井', '長野', '山梨')):
+        return '中部'
+    if any(k in text for k in ('北海道', '札幌', '清田', '厚別')):
+        return '北海道'
+    if any(k in text for k in ('広島', '岡山', '島根', '鳥取', '山口', '香川', '愛媛', '徳島', '高知')):
+        return '中国・四国'
+    if any(k in text for k in ('青森', '秋田', '岩手', '山形', '宮城', '福島', '東北', '仙台')):
+        return '東北'
+    return 'その他'
+
+_ppn_by_region = {}
+for _it in items:
+    _ppn = _it.get('price_per_night', 0) or 0
+    if _ppn <= 0:
+        continue
+    _r = _region_for_chart(_it)
+    _ppn_by_region.setdefault(_r, []).append(_ppn)
+
+_ppn_avg = [(r, int(sum(v) / len(v)), len(v)) for r, v in _ppn_by_region.items()]
+_ppn_avg = [(r, a, n) for r, a, n in _ppn_avg if n >= 1]
+_ppn_avg.sort(key=lambda x: -x[1])
+
+_ppn_labels = [f'{r} (n={n})' for r, _, n in _ppn_avg]
+_ppn_data = [a for _, a, _ in _ppn_avg]
+# Tokyo bar in gold, others in muted blue
+_ppn_colors = ['#c9a558' if r == '東京' else '#6b8db8' for r, _, _ in _ppn_avg]
+_ppn_borders = ['#f1e4c6' if r == '東京' else '#93c5fd' for r, _, _ in _ppn_avg]
+
+_ppn_chart_card = """    <div class="chart-card">
+      <h3>地域別 1泊単価 — 東京 強調</h3>
+      <canvas id="ppnChart"></canvas>
+    </div>"""
+
+_ppn_chart_js = f"""const ppnCtx = document.getElementById('ppnChart').getContext('2d');
+new Chart(ppnCtx, {{
+  type: 'bar',
+  data: {{
+    labels: {_json.dumps(_ppn_labels, ensure_ascii=False)},
+    datasets: [{{
+      label: '平均 1泊単価',
+      data: {_json.dumps(_ppn_data)},
+      backgroundColor: {_json.dumps(_ppn_colors)},
+      borderColor: {_json.dumps(_ppn_borders)},
+      borderWidth: 1.5, borderRadius: 4
+    }}]
+  }},
+  options: {{
+    indexAxis: 'y', responsive: true,
+    scales: {{
+      x: {{ ticks: {{ color: '#a8b8d0', callback: function(v){{ return '¥' + v.toLocaleString(); }} }}, grid: {{ color: 'rgba(201,165,88,0.08)' }} }},
+      y: {{ ticks: {{ color: '#e9d9b8', font: {{ size: 11 }} }}, grid: {{ display: false }} }}
+    }},
+    plugins: {{
+      legend: {{ display: false }},
+      tooltip: {{ callbacks: {{ label: function(ctx){{ return '¥' + ctx.parsed.x.toLocaleString() + ' / 泊'; }} }} }}
+    }}
+  }}
+}});"""
+
+# Inject the new chart card BEFORE the サイト別 案件数 card
+dashboard = dashboard.replace('<div class="chart-card">\n      <h3>サイト別 案件数</h3>',
+                              _ppn_chart_card + '\n    <div class="chart-card">\n      <h3>サイト別 案件数</h3>', 1)
+# Inject the new Chart() JS BEFORE the siteCtx Chart code
+dashboard = dashboard.replace("const siteCtx = document.getElementById('siteChart')",
+                              _ppn_chart_js + "\n\nconst siteCtx = document.getElementById('siteChart')", 1)
+
+print(f"Added PPN chart with {len(_ppn_avg)} regions: {[r for r,_,_ in _ppn_avg]}")
 
 # ──────────────────────── Write outputs ────────────────────────
 with open(OUT_DASHBOARD, 'w') as f:
