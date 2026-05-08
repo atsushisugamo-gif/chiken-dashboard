@@ -371,24 +371,30 @@ def is_at_home_trial(item):
     t = (item.get('title') or '')
     return any(k in t for k in ('在宅モニター', '在宅試験', '在宅治験', '通信モニター'))
 
+OUTPATIENT_FEE = 10000  # 通院1回 = ¥10,000 として控除
+
 def daily_rate(item):
-    """Daily compensation rate including outpatient visits.
-    rate = compensation / (nights + outpatient_count). More realistic than per-night
-    when trials have many 通院 visits.
-    Returns 0 (suppressed) for items that don't fit the per-day model
-    (e.g. at-home monitor trials, items with implausible values)."""
+    """Per-night inpatient rate after deducting outpatient cost.
+    rate = (compensation - outpatient_count * ¥10,000) / nights
+    
+    Returns 0 (suppressed → displayed as '—') for:
+      - At-home / 在宅 trials
+      - 通院-only trials (no nights)
+      - After subtraction, remaining ≤ 0 or out of sanity bounds [3K, 100K]/泊
+    """
     if is_at_home_trial(item):
         return 0
     n = item.get('total_nights') or item.get('nights') or 0
     oc = item.get('outpatient_count')
     if oc is None:
-        oc = extract_outpatient_count(item.get('title',''))
+        oc = extract_outpatient_count(item.get('title', ''))
     comp = item.get('compensation_num', 0) or 0
-    days = (n or 0) + (oc or 0)
-    if days <= 0 or comp <= 0:
+    if not n or comp <= 0:
         return 0
-    rate = comp // days
-    # Sanity bounds: anything outside [3,000, 100,000] yen/day is likely a parse error
+    inpatient_comp = comp - (oc or 0) * OUTPATIENT_FEE
+    if inpatient_comp <= 0:
+        return 0
+    rate = inpatient_comp // n
     if rate < 3000 or rate > 100000:
         return 0
     return rate
@@ -892,6 +898,11 @@ td.visits { color: #e0bb73; font-variant-numeric: tabular-nums; font-size: 0.82r
 
 
 .kanto-card-rate { display: inline-block; margin-left: 6px; padding: 1px 6px; background: rgba(147,197,253,0.14); color: #93c5fd; border: 1px solid rgba(147,197,253,0.3); border-radius: 3px; font-size: 0.7rem; font-weight: 500; vertical-align: middle; }
+
+.formula-note { margin: 4px 0 14px; padding: 8px 12px; background: rgba(8,20,38,0.55); border-left: 2px solid #c9a558; border-radius: 4px; }
+.formula-note .formula { display: block; color: #f1e4c6; font-family: 'SF Mono', Menlo, monospace; font-size: 0.78rem; letter-spacing: 0.04em; margin-bottom: 3px; }
+.formula-note .formula-desc { display: block; color: #a8b8d0; font-size: 0.7rem; line-height: 1.4; }
+
 '''
 
 # ──────────────────────── Build timeline HTML ────────────────────────
@@ -1033,7 +1044,7 @@ html_parts = [f'''
             <th>負担軽減費</th>
             <th>入院</th>
             <th>通院</th>
-            <th>1日単価</th>
+            <th title="(報酬 − 通院回数×¥10,000) ÷ 入院泊数">1泊単価 ⓘ</th>
           </tr>
         </thead>
         <tbody>
@@ -1161,8 +1172,8 @@ if kpi_end in dashboard:
 
 # ──── Add click count header to mainTable ────
 dashboard = dashboard.replace(
-    '<th data-col="7">1日単価</th>',
-    '<th data-col="7">1日単価</th>\n          <th data-col="8" style="text-align:center;width:70px;">👆</th>'
+    '<th data-col="7" title="(報酬 − 通院回数×¥10,000) ÷ 入院泊数">1泊単価 ⓘ</th>',
+    '<th data-col="7" title="(報酬 − 通院回数×¥10,000) ÷ 入院泊数">1泊単価 ⓘ</th>\n          <th data-col="8" style="text-align:center;width:70px;">👆</th>'
 )
 print("Added click column header to mainTable")
 
@@ -1389,7 +1400,7 @@ new_main_html = f"""{_tabs_html}<table id="mainTable">
           <th data-col="4">負担軽減費</th>
           <th data-col="5">入院</th>
           <th data-col="6">通院</th>
-          <th data-col="7">1日単価</th>
+          <th data-col="7" title="(報酬 − 通院回数×¥10,000) ÷ 入院泊数">1泊単価 ⓘ</th>
         </tr>
       </thead>
       <tbody>
@@ -1734,23 +1745,25 @@ def _region_for_chart(it):
 _ppn_by_region = {}
 for _it in items:
     if is_at_home_trial(_it):
-        continue  # at-home trials don't fit per-day model
+        continue
     _n = _it.get('total_nights') or _it.get('nights') or 0
     _oc = _it.get('outpatient_count')
     if _oc is None:
         _oc = extract_outpatient_count(_it.get('title',''))
-    _days = (_n or 0) + (_oc or 0)
     _comp = _it.get('compensation_num', 0) or 0
-    if _days <= 0 or _comp <= 0:
+    if not _n or _comp <= 0:
+        continue
+    _inpatient_comp = _comp - (_oc or 0) * OUTPATIENT_FEE
+    if _inpatient_comp <= 0:
         continue
     _r = _region_for_chart(_it)
-    _ppn_by_region.setdefault(_r, {'comp': 0, 'days': 0, 'count': 0})
-    _ppn_by_region[_r]['comp'] += _comp
-    _ppn_by_region[_r]['days'] += _days
+    _ppn_by_region.setdefault(_r, {'comp': 0, 'nights': 0, 'count': 0})
+    _ppn_by_region[_r]['comp'] += _inpatient_comp
+    _ppn_by_region[_r]['nights'] += _n
     _ppn_by_region[_r]['count'] += 1
 
-# Weighted average: total comp / total days. More representative than mean of per-item rates.
-_ppn_avg = [(r, int(v['comp'] / v['days']) if v['days'] > 0 else 0, v['count']) for r, v in _ppn_by_region.items()]
+# Weighted average: total inpatient_comp / total nights
+_ppn_avg = [(r, int(v['comp'] / v['nights']) if v['nights'] > 0 else 0, v['count']) for r, v in _ppn_by_region.items()]
 _ppn_avg = [(r, a, n) for r, a, n in _ppn_avg if n >= 1]
 _ppn_avg.sort(key=lambda x: -x[1])
 
@@ -1761,7 +1774,11 @@ _ppn_colors = ['#c9a558' if r == '東京' else '#6b8db8' for r, _, _ in _ppn_avg
 _ppn_borders = ['#f1e4c6' if r == '東京' else '#93c5fd' for r, _, _ in _ppn_avg]
 
 _ppn_chart_card = """    <div class="chart-card">
-      <h3>地域別 1日単価 (実質) — 東京 強調</h3>
+      <h3>地域別 1泊単価 — 東京 強調</h3>
+      <div class="formula-note">
+        <span class="formula">(報酬 − 通院回数 × ¥10,000) ÷ 入院泊数</span>
+        <span class="formula-desc">通院費を分離した純粋な泊単価。地域の加重平均で算出。</span>
+      </div>
       <canvas id="ppnChart"></canvas>
     </div>"""
 
@@ -1771,7 +1788,7 @@ new Chart(ppnCtx, {{
   data: {{
     labels: {_json.dumps(_ppn_labels, ensure_ascii=False)},
     datasets: [{{
-      label: '実質1日単価 (¥/日)',
+      label: '1泊単価 (¥/泊・通院費控除後)',
       data: {_json.dumps(_ppn_data)},
       backgroundColor: {_json.dumps(_ppn_colors)},
       borderColor: {_json.dumps(_ppn_borders)},
@@ -1786,7 +1803,7 @@ new Chart(ppnCtx, {{
     }},
     plugins: {{
       legend: {{ display: false }},
-      tooltip: {{ callbacks: {{ label: function(ctx){{ return '¥' + ctx.parsed.x.toLocaleString() + ' / 日'; }} }} }}
+      tooltip: {{ callbacks: {{ label: function(ctx){{ return '¥' + ctx.parsed.x.toLocaleString() + ' / 泊'; }} }} }}
     }}
   }}
 }});"""
