@@ -1181,17 +1181,33 @@ CAL_JS = '''
     }
     setTimeout(function(){
       const target = document.querySelector('tr[data-row-date="' + dateStr + '"]');
-      if (target) {
-        target.scrollIntoView({behavior: 'smooth', block: 'center'});
-        // Highlight all rows with same date
+      if (!target) {
+        if (monthRow) monthRow.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+      }
+      // 1) Scroll the inner table-wrap container so target is visible inside it
+      const container = target.closest('.table-wrap');
+      if (container) {
+        const tRect = target.getBoundingClientRect();
+        const cRect = container.getBoundingClientRect();
+        const targetTopInContainer = (tRect.top - cRect.top) + container.scrollTop;
+        container.scrollTo({ top: Math.max(0, targetTopInContainer - 40), behavior: 'auto' });
+      }
+      // 2) Smooth-scroll the page so timeline-hero is visible (after inner scroll completes)
+      requestAnimationFrame(function(){
+        const hero = document.getElementById('timelineSection');
+        if (hero) {
+          const heroRect = hero.getBoundingClientRect();
+          const pageY = (heroRect.top + window.scrollY) - 40;
+          window.scrollTo({ top: pageY, behavior: 'smooth' });
+        }
+        // Highlight all matching rows
         const all = document.querySelectorAll('tr[data-row-date="' + dateStr + '"]');
         all.forEach(function(r){
           r.classList.add('flash-highlight');
           setTimeout(function(){ r.classList.remove('flash-highlight'); }, 2400);
         });
-      } else if (monthRow) {
-        monthRow.scrollIntoView({behavior: 'smooth', block: 'center'});
-      }
+      });
     }, 100);
   };
   // Inject highlight CSS
