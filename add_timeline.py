@@ -477,6 +477,54 @@ td.date-cell.undated { color: #6b7c93; font-style: italic; opacity: 0.6; }
   table { font-size: 0.76rem; }
   table th, table td { padding: 8px 6px; }
 }
+
+
+/* ── Timeline month bar ── */
+.tl-bar-wrap {
+  display: flex; gap: 12px; align-items: flex-end;
+  margin: 16px 0 18px; padding: 14px 18px;
+  background: linear-gradient(145deg, rgba(8,20,38,0.6), rgba(15,30,52,0.4));
+  border: 1px solid rgba(201,165,88,0.15);
+  border-radius: 10px;
+  overflow-x: auto;
+}
+.tl-bar-item {
+  min-width: 64px; flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; cursor: pointer; transition: transform 0.15s;
+}
+.tl-bar-item:hover { transform: translateY(-2px); }
+.tl-bar-count { font-size: 0.95rem; font-weight: 500; color: #f1e4c6; font-variant-numeric: tabular-nums; }
+.tl-bar-col {
+  width: 32px; min-height: 18px; border-radius: 4px;
+  background: linear-gradient(180deg, #c9a558, #8a6f30) !important;
+  box-shadow: 0 2px 8px rgba(201,165,88,0.25);
+}
+.tl-bar-label { font-size: 0.72rem; color: #a8b8d0; letter-spacing: 0.05em; }
+
+.status-legend { display: flex; gap: 14px; margin: 8px 0 12px; flex-wrap: wrap; font-size: 0.74rem; color: #a8b8d0; }
+.status-legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+.legend-dot.dup { background: rgba(167,139,250,0.6); }
+.legend-dot.new { background: rgba(134,239,172,0.6); }
+.legend-dot.updated { background: rgba(252,211,77,0.6); }
+
+.table-wrap { overflow: auto; border: 1px solid rgba(201,165,88,0.15); }
+
+/* ── Month header rows (collapsible) ── */
+.month-header td {
+  cursor: pointer; user-select: none;
+  position: relative;
+}
+.month-header.collapsed td::after { content: ' ▶'; opacity: 0.6; }
+.month-header td::after { content: ' ▼'; opacity: 0.6; transition: transform 0.2s; }
+
+/* ── Click tracking column ── */
+.tl-click-col { text-align: center; padding: 8px 6px !important; }
+
+/* ── Charts canvas containment ── */
+.chart-card canvas { max-height: 280px; }
+
 '''
 
 # ──────────────────────── Build timeline HTML ────────────────────────
@@ -778,7 +826,7 @@ TTAB_JS = '''
 })();
 </script>
 '''
-dashboard = dashboard.replace('</script>\n</body>', TTAB_JS + '</script>\n</body>')
+dashboard = dashboard.replace('</script>\n</body>', '</script>\n' + TTAB_JS + '\n</body>')
 
 
 print("Added tracking JavaScript")
