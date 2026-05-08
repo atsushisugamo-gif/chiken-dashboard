@@ -767,6 +767,38 @@ td.visits { color: #e0bb73; font-variant-numeric: tabular-nums; font-size: 0.82r
   .arch-section { padding: 18px 16px; }
 }
 
+
+/* ── Mini calendar grid ── */
+.tl-cal-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 14px 0 18px; }
+.tl-cal { background: linear-gradient(145deg, rgba(8,20,38,0.65), rgba(15,30,52,0.8)); border: 1px solid rgba(201,165,88,0.22); border-radius: 12px; padding: 14px 12px 12px; }
+.tl-cal-title { color: #c9a558; font-size: 0.86rem; font-weight: 700; letter-spacing: 0.12em; margin-bottom: 10px; text-align: center; padding-bottom: 8px; border-bottom: 1px solid rgba(201,165,88,0.18); }
+.tl-cal-title .total { color: #a8b8d0; font-weight: 400; font-size: 0.74rem; margin-left: 8px; letter-spacing: 0.04em; }
+.tl-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.tl-cal-head { font-size: 0.66rem; color: #7c8db5; text-align: center; padding: 4px 0 6px; letter-spacing: 0.06em; font-weight: 600; }
+.tl-cal-head.sun { color: #fca5a5; }
+.tl-cal-head.sat { color: #93c5fd; }
+.tl-cal-day { font-size: 0.72rem; color: #4a5568; padding: 6px 0 4px; min-height: 38px; text-align: center; border-radius: 5px; position: relative; line-height: 1.1; }
+.tl-cal-day.has-trials { background: rgba(201,165,88,0.18); color: #f1e4c6; cursor: pointer; transition: all 0.15s; border: 1px solid rgba(201,165,88,0.18); }
+.tl-cal-day.has-trials:hover { background: rgba(201,165,88,0.45); transform: scale(1.05); border-color: #c9a558; box-shadow: 0 2px 8px rgba(201,165,88,0.3); }
+.tl-cal-day.lvl-2 { background: rgba(201,165,88,0.30); }
+.tl-cal-day.lvl-3 { background: rgba(201,165,88,0.48); border-color: rgba(201,165,88,0.4); }
+.tl-cal-day.lvl-4 { background: rgba(201,165,88,0.68); border-color: rgba(241,228,198,0.5); color: #fff; }
+.tl-cal-day.lvl-5 { background: rgba(241,228,198,0.88); border-color: #f1e4c6; color: #0a1c33; font-weight: 600; }
+.tl-cal-day .cal-num { font-weight: 600; font-size: 0.78rem; }
+.tl-cal-day .cal-count { font-size: 0.62rem; color: #c9a558; font-weight: 700; display: block; margin-top: 1px; letter-spacing: 0.04em; }
+.tl-cal-day.lvl-4 .cal-count, .tl-cal-day.lvl-5 .cal-count { color: #0a1c33; }
+.tl-cal-day .cal-dup { position: absolute; top: 3px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: #c4b5fd; box-shadow: 0 0 5px rgba(167,139,250,0.7); }
+.tl-cal-day.today { outline: 2px solid #c9a558; outline-offset: -1px; }
+.tl-cal-legend { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 0.7rem; color: #a8b8d0; flex-wrap: wrap; padding: 8px 4px 0; border-top: 1px solid rgba(201,165,88,0.12); }
+.tl-cal-legend-scale { display: flex; align-items: center; gap: 4px; }
+.tl-cal-legend-cell { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(201,165,88,0.2); }
+.tl-cal-legend-dot { width: 7px; height: 7px; border-radius: 50%; background: #c4b5fd; box-shadow: 0 0 4px rgba(167,139,250,0.6); }
+
+@media (max-width: 768px) {
+  .tl-cal-wrap { grid-template-columns: 1fr; }
+  .tl-cal-day { min-height: 32px; font-size: 0.68rem; }
+}
+
 '''
 
 # ──────────────────────── Build timeline HTML ────────────────────────
@@ -785,7 +817,8 @@ for i, (mk, mv) in enumerate(months.items()):
     height_pct = max(25, int(len(mv) / max_count * 100))
     bg = bar_colors[i % len(bar_colors)]
     short_label = mk.replace('2026年', '').replace('月', '')
-    bar_items_html += f'''<div class="tl-bar-item" onclick="document.getElementById('month-{i}')?.scrollIntoView({{behavior:'smooth',block:'center'}})">
+    _bar_ymid = mv[0]['start_date'].strftime('%Y-%m') if mv and mv[0].get('start_date') else f'i{i}'
+    bar_items_html += f'''<div class="tl-bar-item" onclick="document.getElementById('month-{_bar_ymid}')?.scrollIntoView({{behavior:'smooth',block:'center'}})">
       <div class="tl-bar-count">{len(mv)}</div>
       <div class="tl-bar-col" style="height:{height_pct}%;background:{bg};"></div>
       <div class="tl-bar-label">{short_label}月</div>
@@ -815,6 +848,66 @@ stat_upd_html = f'''<div class="tl-stat">
         <span style="color:#7c8db5;">更新</span> <span class="num orange">{updated_count}件</span>
       </div>''' if updated_count > 0 else ''
 
+# Build mini calendar HTML for each month with trials
+from calendar import monthrange as _monthrange
+from collections import defaultdict as _defaultdict
+
+_by_date = _defaultdict(list)
+for _it in items:
+    _d = _it.get('_start_date')
+    if _d:
+        _by_date[_d].append(_it)
+
+_months_set = sorted(set((d.year, d.month) for d in _by_date.keys()))
+
+def _level_for(n):
+    if n <= 1: return ''
+    if n <= 3: return 'lvl-2'
+    if n <= 6: return 'lvl-3'
+    if n <= 10: return 'lvl-4'
+    return 'lvl-5'
+
+_cal_blocks = []
+for _y, _mn in _months_set:
+    _first_wd, _ndays = _monthrange(_y, _mn)
+    # Python weekday: Mon=0..Sun=6. Sunday-start grid: leading = (Mon-based + 1) % 7
+    _leading = (_first_wd + 1) % 7
+    _month_count = sum(1 for d in _by_date if d.year == _y and d.month == _mn)
+    _cells = []
+    for _ in range(_leading):
+        _cells.append('<div class="tl-cal-day"></div>')
+    for _day in range(1, _ndays + 1):
+        _dt = date(_y, _mn, _day)
+        _trials = _by_date.get(_dt, [])
+        _wd_idx = (_first_wd + (_day - 1)) % 7
+        _is_sun = _wd_idx == 6
+        _is_sat = _wd_idx == 5
+        _today_cls = ' today' if _dt == TODAY else ''
+        if _trials:
+            _n = len(_trials)
+            _has_dup = any((it.get('source_count', 1) or 1) > 1 for it in _trials)
+            _lvl = _level_for(_n)
+            _cls = ('has-trials ' + _lvl).strip() + _today_cls
+            _dup = '<span class="cal-dup" title="複数サイト重複あり"></span>' if _has_dup else ''
+            _ymid = _dt.strftime('%Y-%m')
+            _cells.append(f'<div class="tl-cal-day {_cls}" title="{_y}/{_mn}/{_day} {_n}件" onclick="document.getElementById(\'month-{_ymid}\')?.scrollIntoView({{behavior:\'smooth\',block:\'center\'}})"><span class="cal-num">{_day}</span><span class="cal-count">{_n}件</span>{_dup}</div>')
+        else:
+            _color = ' style="color:#fca5a5;"' if _is_sun else (' style="color:#7c8db5;"' if _is_sat else '')
+            _cells.append(f'<div class="tl-cal-day{_today_cls}"{_color}><span class="cal-num">{_day}</span></div>')
+    _heads = '<div class="tl-cal-head sun">日</div><div class="tl-cal-head">月</div><div class="tl-cal-head">火</div><div class="tl-cal-head">水</div><div class="tl-cal-head">木</div><div class="tl-cal-head">金</div><div class="tl-cal-head sat">土</div>'
+    _cal_blocks.append(f'<div class="tl-cal"><div class="tl-cal-title">{_y}年{_mn}月<span class="total">— {_month_count}日に予定</span></div><div class="tl-cal-grid">{_heads}{chr(10).join(_cells)}</div></div>')
+
+_cal_html = '<div class="tl-cal-wrap">' + ''.join(_cal_blocks) + '</div>' if _cal_blocks else ''
+_cal_legend_html = '''<div class="tl-cal-legend">
+  <span style="color:#c9a558;font-weight:600;letter-spacing:0.06em;">凡例</span>
+  <div class="tl-cal-legend-scale"><div class="tl-cal-legend-cell" style="background:rgba(201,165,88,0.18);"></div><span>1件</span></div>
+  <div class="tl-cal-legend-scale"><div class="tl-cal-legend-cell" style="background:rgba(201,165,88,0.30);"></div><span>2-3件</span></div>
+  <div class="tl-cal-legend-scale"><div class="tl-cal-legend-cell" style="background:rgba(201,165,88,0.48);"></div><span>4-6件</span></div>
+  <div class="tl-cal-legend-scale"><div class="tl-cal-legend-cell" style="background:rgba(201,165,88,0.68);"></div><span>7-10件</span></div>
+  <div class="tl-cal-legend-scale"><div class="tl-cal-legend-cell" style="background:rgba(241,228,198,0.88);"></div><span>11件以上</span></div>
+  <div class="tl-cal-legend-scale" style="margin-left:12px;"><div class="tl-cal-legend-dot"></div><span>複数サイト重複あり</span></div>
+</div>'''
+
 html_parts = [f'''
   <!-- 入院日カレンダー v3 -->
   <div class="timeline-hero" id="timelineSection">
@@ -833,6 +926,8 @@ html_parts = [f'''
       {stat_upd_html}
     </div>
     <div class="tl-bar-wrap">{bar_items_html}</div>
+    {_cal_html}
+    {_cal_legend_html}
     {legend_html}
     <div class="table-wrap" style="max-height:55vh;border-radius:10px;">
       <table>
@@ -896,7 +991,8 @@ for i, (month_label, entries) in enumerate(months.items()):
     if upd_in_month > 0:
         extra += f' <span class="badge badge-updated">{upd_in_month} 更新</span>'
 
-    html_parts.append(f'''        <tr class="month-header{collapsed}" id="month-{i}" style="background:rgba(26,39,68,0.8);" onclick="this.classList.toggle('collapsed');let s=this.nextElementSibling;while(s&&!s.classList.contains('month-header')){{s.classList.toggle('hidden');s=s.nextElementSibling;}}">
+    _ymid = entries[0]['start_date'].strftime('%Y-%m') if entries and entries[0].get('start_date') else f'i{i}'
+    html_parts.append(f'''        <tr class="month-header{collapsed}" id="month-{_ymid}" style="background:rgba(26,39,68,0.8);" onclick="this.classList.toggle('collapsed');let s=this.nextElementSibling;while(s&&!s.classList.contains('month-header')){{s.classList.toggle('hidden');s=s.nextElementSibling;}}">
           <td colspan="7"><span class="{badge_cls}">{month_label}</span><span class="month-count">{len(entries)}件</span>{extra}<span class="month-toggle">▼</span></td>
         </tr>
 ''')
