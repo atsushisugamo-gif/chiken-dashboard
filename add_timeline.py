@@ -813,6 +813,8 @@ td.visits { color: #e0bb73; font-variant-numeric: tabular-nums; font-size: 0.82r
   .tl-cal-day { min-height: 32px; font-size: 0.68rem; }
 }
 
+
+.kanto-card-rate { display: inline-block; margin-left: 6px; padding: 1px 6px; background: rgba(147,197,253,0.14); color: #93c5fd; border: 1px solid rgba(147,197,253,0.3); border-radius: 3px; font-size: 0.7rem; font-weight: 500; vertical-align: middle; }
 '''
 
 # ──────────────────────── Build timeline HTML ────────────────────────
@@ -1497,6 +1499,8 @@ for _it in _kanto_items[:18]:
     _site = esc(_it.get('site') or '')
     _comp = _it.get('compensation_num', 0) or 0
     _comp_str = f'¥{_comp:,}' if _comp else '—'
+    _dr = daily_rate(_it)
+    _dr_str = f'<span class="kanto-card-rate">¥{_dr:,}/日</span>' if _dr else ''
     _n = _it.get('total_nights', 0) or 0
     _oc = _it.get('outpatient_count', 0) or extract_outpatient_count(_it.get('title',''))
     _spec = []
@@ -1511,7 +1515,7 @@ for _it in _kanto_items[:18]:
         <span class="kanto-card-site">{_site}</span>
       </div>
       <div class="kanto-card-foot">
-        <span class="kanto-card-comp">{_comp_str}</span>
+        <span class="kanto-card-comp">{_comp_str}{_dr_str}</span>
         <span class="kanto-card-spec">{_spec_html}</span>
       </div>
     </a>""")
