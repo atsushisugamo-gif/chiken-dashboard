@@ -362,6 +362,9 @@ def scrape_seikatsu_kojo():
         # Recruiting status
         is_closed = '募集終了' in c and '募集中' not in c
 
+        # Try to extract date from detail page body if title doesn't have one
+        scraped_start_date = extract_date_from_body(c)
+
         items.append({
             'title': title,
             'url': url,
@@ -370,6 +373,7 @@ def scrape_seikatsu_kojo():
             'area_raw': prefecture,
             'compensation': f'総額約{comp_num:,}円' if comp_num else '不明',
             'compensation_num': comp_num,
+            'scraped_start_date': scraped_start_date,
             'nights': total_nights,
             'nights_desc': nights_desc,
             'total_nights': total_nights,
@@ -397,6 +401,49 @@ def clean_text(s):
     """Strip HTML tags and decode entities."""
     s = re.sub(r'<[^>]+>', '', s or '')
     return html.unescape(s).strip()
+
+def extract_date_from_body(html_content, year=None):
+    """Extract earliest plausible 入院/開始 date from detail page HTML.
+    Returns ISO date string 'YYYY-MM-DD' or None."""
+    from datetime import date, timedelta
+    if year is None:
+        year = date.today().year
+    if not html_content:
+        return None
+    # Strip tags + decode entities
+    text = re.sub(r'<[^>]*>', ' ', html_content)
+    text = html.unescape(text)
+
+    candidates = []
+    # 2026年5月8日 or 2026/5/8 or 2026-5-8 or 2026.5.8
+    for m in re.finditer(r'(\d{4})[年./\-](\d{1,2})[月./\-](\d{1,2})', text):
+        try: candidates.append(date(int(m.group(1)), int(m.group(2)), int(m.group(3))))
+        except ValueError: pass
+    # 5月8日 (assume current year)
+    for m in re.finditer(r'(?<!\d)(\d{1,2})月(\d{1,2})日', text):
+        try: candidates.append(date(year, int(m.group(1)), int(m.group(2))))
+        except ValueError: pass
+    # 5/8(金) or 5/8（金）
+    for m in re.finditer(r'(?<!\d)(\d{1,2})/(\d{1,2})\s*[(「（][月火水木金土日](?:」|[)）])', text):
+        try: candidates.append(date(year, int(m.group(1)), int(m.group(2))))
+        except ValueError: pass
+    # 5/8 followed by 入院/開始/スタート/から
+    for m in re.finditer(r'(?<!\d)(\d{1,2})/(\d{1,2})\s*[^/0-9]*?(?:入院|開始|スタート|から)', text):
+        try: candidates.append(date(year, int(m.group(1)), int(m.group(2))))
+        except ValueError: pass
+
+    if not candidates:
+        return None
+    today = date.today()
+    # Keep only future-ish dates (within -7 to +180 days)
+    valid = [d for d in candidates if (today - timedelta(days=7)) <= d <= (today + timedelta(days=200))]
+    if not valid:
+        # Fall back to nearest future date
+        future = [d for d in candidates if d >= today]
+        if future:
+            return min(future).isoformat()
+        return None
+    return min(valid).isoformat()
 
 def extract_nights_from_title(title):
     """Extract ALL N泊 tokens from title and sum, handling:
@@ -447,7 +494,7 @@ def extract_prefecture(text):
         return m.group(1)
     return '不明'
 
-def make_item(title, url, site, comp_num=0, total_nights=0, nights_desc=None, prefecture=None):
+def make_item(title, url, site, comp_num=0, total_nights=0, nights_desc=None, prefecture=None, scraped_start_date=None):
     """Build standardized item dict."""
     if prefecture is None:
         prefecture = extract_prefecture(title)
@@ -475,6 +522,7 @@ def make_item(title, url, site, comp_num=0, total_nights=0, nights_desc=None, pr
         'area_raw': prefecture,
         'compensation': f'総額約{comp_num:,}円' if comp_num else '不明',
         'compensation_num': comp_num,
+        'scraped_start_date': scraped_start_date,
         'nights': total_nights,
         'nights_desc': nights_desc,
         'total_nights': total_nights,
@@ -545,7 +593,8 @@ def scrape_generic_site(site_name, index_url, detail_pattern, detail_prefix,
                 if comp_num:
                     break
 
-        items.append(make_item(title, url, site_name, comp_num, total_nights, nights_desc))
+        scraped_start_date = extract_date_from_body(c)
+        items.append(make_item(title, url, site_name, comp_num, total_nights, nights_desc, scraped_start_date=scraped_start_date))
         if (i + 1) % 10 == 0:
             print(f"[{site_name}] Processed {i+1}/{len(paths)} ({len(items)} hospitalization)")
     

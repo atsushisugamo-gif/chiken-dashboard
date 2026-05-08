@@ -448,7 +448,9 @@ def trial_type_badges(item):
     return ''
 
 # ──────────────────────── Date extraction ────────────────────────
-def extract_date(title):
+def extract_date(title_or_item):
+    """Extract date from title string OR fall back to item['scraped_start_date']."""
+    title = title_or_item if isinstance(title_or_item, str) else title_or_item.get('title','')
     m = re.search(r'(\d{4})\.(\d{2})\.(\d{2})', title)
     if m:
         try: return date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
@@ -476,6 +478,14 @@ def extract_date(title):
 
 for item in items:
     item['_start_date'] = extract_date(item['title'])
+    # Fallback: if title didn't yield a date, try scraped_start_date from body
+    if not item['_start_date'] and item.get('scraped_start_date'):
+        try:
+            from datetime import date as _date
+            _y, _m, _d = item['scraped_start_date'].split('-')
+            item['_start_date'] = _date(int(_y), int(_m), int(_d))
+        except Exception:
+            pass
     item['prefecture'] = smart_location(item)
     item['area'] = item['prefecture']
     # Re-derive nights from title to fix patterns like '6泊2回' / '6泊7日×2回' that scraper missed
