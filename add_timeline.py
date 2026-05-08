@@ -133,7 +133,7 @@ _DISTRICT_TO_WARD = {
 }
 
 _SHORT_TO_CITY = {
-    '横浜': '横浜市', '京都': '京都市', '神戸': '神戸市', '札幌': '札幌市',
+    '東京': '東京都', '横浜': '横浜市', '京都': '京都市', '神戸': '神戸市', '札幌': '札幌市',
     '名古屋': '名古屋市', '仙台': '仙台市', '広島': '広島市', '奈良': '奈良市',
     '熊本': '熊本市', '福岡': '福岡市', '大阪': '大阪府',
 }
@@ -200,7 +200,14 @@ def smart_location(item):
     pref = (item.get('prefecture') or '').strip()
     title = item.get('title', '') or ''
 
+    _BROAD = {'関東', '関西', '中部', '九州', '九州・沖縄', '東北', '中国', '四国', '中国・四国', '北海道', 'その他', '都内'}
     if pref and pref != '不明':
+        # 0) If pref is just a broad region, try to upgrade with title-derived specific location
+        if pref in _BROAD:
+            ext = _extract_location_from_text(title)
+            if ext and ext not in _BROAD and ext != pref:
+                return ext
+            return pref
         # 1) Strip pref prefix to expose city (handles "神奈川横浜市" → "横浜市", "東京台東区" → "台東区")
         stripped = _strip_pref_prefix(pref)
         if stripped and stripped != pref:
@@ -215,10 +222,11 @@ def smart_location(item):
             m = matches[-1]
             return m.group(1) + m.group(2)
 
-        # 3) If pref is a clean 都道府県, try to upgrade with title
+        # 3) If pref is a clean 都道府県, try to upgrade with title (only if ext is more specific)
         if pref in _PREFS:
             ext = _extract_location_from_text(title)
-            if ext and ext not in _PREFS and ext != pref:
+            # Only swap if ext is a 市区町村 (more specific), not a broad region
+            if ext and ext not in _PREFS and ext not in _BROAD and ext != pref:
                 return ext
             return pref
 
@@ -232,6 +240,55 @@ def smart_location(item):
     return ext or '不明'
 
 # ──────────────────────── Trial type helpers (added) ────────────────────────
+def recalc_nights_from_title(title):
+    """Re-derive total nights from title, handling all multiplier forms.
+    Returns (total_nights, desc_str_or_None).
+    Patterns:
+      N泊M日×K回   (e.g. 6泊7日×2回)  -> N*K
+      N泊×K回                       -> N*K
+      N泊K回 (implicit, NOT after 通院/来院/通所) -> N*K
+      Plain N泊                      -> N
+    """
+    if not title:
+        return 0, None
+    total = 0
+    desc = []
+    used = []  # list of (start, end) consumed ranges
+    def overlap(s, e):
+        return any(us <= s < ue or s <= us < e for us, ue in used)
+    # 1) N泊M日×K回
+    for m in re.finditer(r'(\d+)泊\d+日\s*[×xX]\s*(\d+)\s*回?', title):
+        n, k = int(m.group(1)), int(m.group(2))
+        total += n * k
+        desc.append(f'{n}泊×{k}回')
+        used.append((m.start(), m.end()))
+    # 2) N泊×K回
+    for m in re.finditer(r'(\d+)泊\s*[×xX]\s*(\d+)\s*回?', title):
+        if overlap(m.start(), m.end()): continue
+        n, k = int(m.group(1)), int(m.group(2))
+        total += n * k
+        desc.append(f'{n}泊×{k}回')
+        used.append((m.start(), m.end()))
+    # 3) N泊K回 (implicit), but skip if preceded by 通院/来院/通所
+    for m in re.finditer(r'(\d+)泊\s*(\d+)\s*回', title):
+        if overlap(m.start(), m.end()): continue
+        before = title[max(0, m.start()-3):m.start()]
+        if any(kw in before for kw in ('通院', '来院', '通所')): continue
+        n, k = int(m.group(1)), int(m.group(2))
+        total += n * k
+        desc.append(f'{n}泊×{k}回')
+        used.append((m.start(), m.end()))
+    # 4) Standalone N泊 (after removing consumed parts)
+    cleaned = list(title)
+    for s, e in used:
+        for i in range(s, e):
+            cleaned[i] = ' '
+    standalone = re.findall(r'(\d+)泊', ''.join(cleaned))
+    for n in standalone:
+        total += int(n)
+        desc.append(f'{n}泊')
+    return total, ('+'.join(desc) if len(desc) > 1 else None)
+
 def extract_outpatient_count(title):
     """Extract total 通院/通所/来院 count from title (for backward compat)."""
     if not title:
@@ -309,10 +366,19 @@ def build_outpatient_cell(item):
     return '—'
 
 
+def is_at_home_trial(item):
+    """Detect 在宅モニター/在宅試験 — these don't fit the per-day model."""
+    t = (item.get('title') or '')
+    return any(k in t for k in ('在宅モニター', '在宅試験', '在宅治験', '通信モニター'))
+
 def daily_rate(item):
     """Daily compensation rate including outpatient visits.
     rate = compensation / (nights + outpatient_count). More realistic than per-night
-    when trials have many 通院 visits."""
+    when trials have many 通院 visits.
+    Returns 0 (suppressed) for items that don't fit the per-day model
+    (e.g. at-home monitor trials, items with implausible values)."""
+    if is_at_home_trial(item):
+        return 0
     n = item.get('total_nights') or item.get('nights') or 0
     oc = item.get('outpatient_count')
     if oc is None:
@@ -321,7 +387,11 @@ def daily_rate(item):
     days = (n or 0) + (oc or 0)
     if days <= 0 or comp <= 0:
         return 0
-    return comp // days
+    rate = comp // days
+    # Sanity bounds: anything outside [3,000, 100,000] yen/day is likely a parse error
+    if rate < 3000 or rate > 100000:
+        return 0
+    return rate
 
 def trial_type_badges(item):
     """Tiny badges shown next to title. Returns HTML."""
@@ -365,6 +435,13 @@ for item in items:
     item['_start_date'] = extract_date(item['title'])
     item['prefecture'] = smart_location(item)
     item['area'] = item['prefecture']
+    # Re-derive nights from title to fix patterns like '6泊2回' / '6泊7日×2回' that scraper missed
+    _new_n, _new_desc = recalc_nights_from_title(item.get('title', ''))
+    if _new_n > 0:
+        item['total_nights'] = _new_n
+        item['nights'] = _new_n
+        if _new_desc:
+            item['nights_desc'] = _new_desc
 
 # Filter: drop past-dated trials only. Keep undated items (they're typically active recruits without explicit start dates).
 _before_filter = len(items)
@@ -1656,6 +1733,8 @@ def _region_for_chart(it):
 
 _ppn_by_region = {}
 for _it in items:
+    if is_at_home_trial(_it):
+        continue  # at-home trials don't fit per-day model
     _n = _it.get('total_nights') or _it.get('nights') or 0
     _oc = _it.get('outpatient_count')
     if _oc is None:
