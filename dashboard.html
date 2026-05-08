@@ -305,6 +305,88 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
 td.visits { color: #e0bb73; font-variant-numeric: tabular-nums; font-size: 0.82rem; }
 .sub-count { color: #a8b8d0; opacity: 0.7; font-size: 0.78rem; margin-left: 3px; }
 
+/* ── Kanto featured ── */
+.kanto-featured {
+  background: linear-gradient(135deg, rgba(201,165,88,0.12) 0%, rgba(20,38,67,0.7) 50%, rgba(201,165,88,0.08) 100%);
+  border: 1.5px solid rgba(201,165,88,0.45);
+  border-radius: 18px;
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 4px 24px rgba(201,165,88,0.12), inset 0 1px 0 rgba(241,228,198,0.18);
+}
+.kanto-featured::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #c9a558 25%, #f1e4c6 50%, #c9a558 75%, transparent 100%);
+}
+.kanto-banner { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.kanto-banner h2 {
+  font-size: 1.45rem; font-weight: 300; letter-spacing: 0.12em; line-height: 1.2;
+  background: linear-gradient(135deg, #f1e4c6 0%, #c9a558 50%, #f1e4c6 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.kanto-subtitle { color: #cbd5e1; font-size: 0.78rem; opacity: 0.85; letter-spacing: 0.04em; }
+.kanto-badge { background: rgba(201,165,88,0.22); color: #f1e4c6; padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; border: 1px solid rgba(201,165,88,0.5); letter-spacing: 0.06em; }
+.kanto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
+.kanto-card {
+  display: block; background: linear-gradient(145deg, rgba(11,24,44,0.82), rgba(8,20,38,0.95));
+  border: 1px solid rgba(201,165,88,0.22); border-radius: 12px; padding: 14px 16px;
+  text-decoration: none; color: #e9d9b8; transition: all 0.2s; position: relative;
+}
+.kanto-card:hover {
+  transform: translateY(-3px); border-color: #c9a558;
+  box-shadow: 0 10px 28px rgba(201,165,88,0.22), 0 4px 16px rgba(0,0,0,0.4);
+}
+.kanto-card-date { color: #c9a558; font-size: 0.78rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.06em; }
+.kanto-card-title { color: #f1e4c6; font-size: 0.86rem; line-height: 1.45; margin-bottom: 10px; min-height: 2.6em; }
+.kanto-card-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 0.7rem; margin-bottom: 10px; }
+.kanto-card-area { color: #93c5fd; }
+.kanto-card-site { color: #a8b8d0; }
+.kanto-card-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(201,165,88,0.14); }
+.kanto-card-comp { color: #c9a558; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+.kanto-card-spec { color: #a8b8d0; font-size: 0.72rem; }
+
+/* ── Architecture / 仕組み ── */
+.arch-section {
+  background: linear-gradient(145deg, rgba(15,30,52,0.85), rgba(8,20,38,0.95));
+  border: 1px solid rgba(201,165,88,0.18); border-radius: 14px;
+  padding: 28px 32px; margin: 30px 0 24px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.4);
+}
+.arch-section h2 {
+  color: #c9a558; font-size: 1.1rem; font-weight: 500; letter-spacing: 0.12em;
+  margin-bottom: 8px; padding-bottom: 12px; border-bottom: 1px solid rgba(201,165,88,0.2);
+}
+.arch-desc { color: #cbd5e1; font-size: 0.86rem; margin-bottom: 22px; line-height: 1.7; }
+.arch-svg { width: 100%; height: auto; max-height: 720px; display: block; margin: 0 auto; }
+.arch-note { color: #a8b8d0; font-size: 0.78rem; margin-top: 18px; padding: 14px 16px; background: rgba(8,20,38,0.6); border-left: 3px solid #c9a558; border-radius: 4px; line-height: 1.7; }
+
+
+/* Click tracking */
+.click-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 22px; padding: 0 6px;
+  border-radius: 12px; font-size: 0.72rem; font-weight: 700; text-align: center;
+}
+.click-count.zero { background: rgba(71,85,105,0.3); color: #64748b; }
+.click-count.low { background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(99,102,241,0.2)); color: #93c5fd; }
+.click-count.mid { background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(236,72,153,0.2)); color: #d8b4fe; }
+.click-count.high { background: linear-gradient(135deg, rgba(239,68,68,0.3), rgba(249,115,22,0.2)); color: #fca5a5; animation: pulse-hot 2s ease-in-out infinite; }
+@keyframes pulse-hot { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); } 50% { box-shadow: 0 0 6px 2px rgba(239,68,68,0.15); } }
+a.unvisited { position: relative; }
+a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; margin-right: 5px; vertical-align: middle; box-shadow: 0 0 4px rgba(59,130,246,0.5); }
+.tl-click-col { text-align: center; width: 60px; }
+
+@media (max-width: 768px) {
+  .kanto-featured { padding: 18px 16px; }
+  .kanto-banner h2 { font-size: 1.15rem; }
+  .kanto-grid { grid-template-columns: 1fr; }
+  .arch-section { padding: 18px 16px; }
+}
+
+
 </style>
 </head>
 <body>
@@ -328,7 +410,234 @@ td.visits { color: #e0bb73; font-variant-numeric: tabular-nums; font-size: 0.82r
   </div>
 
   <!-- Charts -->
-  <div class="charts-grid">
+  <div class="kanto-featured">
+  <div class="kanto-banner">
+    <div>
+      <h2>🌟 関東エリア特集</h2>
+      <div class="kanto-subtitle">Tokyo &amp; 横浜 — このダッシュボード最重要エリア</div>
+    </div>
+    <div class="kanto-badge">全 21 件</div>
+  </div>
+  <div class="kanto-grid">
+    <a class="kanto-card" href="https://chiken-net.site/products/detail/1003077" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/8(金)</div>
+      <div class="kanto-card-title">【関東/東京/お得治験】【短期治験】【18歳～45歳】5月8日(金)～治験開始 2泊×2回+メール連絡5回</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 墨田区</span>
+        <span class="kanto-card-site">治験ネット</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥127,000</span>
+        <span class="kanto-card-spec">🏥 4泊</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://chiken-net.site/products/detail/1003212" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/8(金)</div>
+      <div class="kanto-card-title">【関東/東京台東区/新着】【飲料食品試験】【20～39歳】【非喫煙者】【男性】事前検査：5月8日(金)から 事前検査1回</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 台東区</span>
+        <span class="kanto-card-site">治験ネット</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥25,000</span>
+        <span class="kanto-card-spec">🏥 1泊</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://chiken-net.site/products/detail/1002962" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/9(土)</div>
+      <div class="kanto-card-title">【関東/東京/新着】【喫煙者可】【18歳～44歳】 5月9日(土)～治験開始 8泊＋通院1回</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 墨田区</span>
+        <span class="kanto-card-site">治験ネット</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥210,000</span>
+        <span class="kanto-card-spec">🏥 8泊 / 🚶 通院1回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://www.seikatsu-kojo.jp/clinical/36919.html" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/12(火)</div>
+      <div class="kanto-card-title">追加日程登場★港区 15泊+6通院 5/12(火)から[65歳以上限定]※単回皮下注射</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 港区</span>
+        <span class="kanto-card-site">生活向上WEB</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥530,000</span>
+        <span class="kanto-card-spec">🏥 15泊 / 🚶 通院6回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://www.seikatsu-kojo.jp/clinical/36853.html" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/12(火)</div>
+      <div class="kanto-card-title">残りわずか★港区 15泊+6通院 5/12(火)から[65歳以上限定]※単回皮下注射</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 港区</span>
+        <span class="kanto-card-site">生活向上WEB</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥530,000</span>
+        <span class="kanto-card-spec">🏥 15泊 / 🚶 通院6回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://www.seikatsu-kojo.jp/clinical/36413.html" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/12(火)</div>
+      <div class="kanto-card-title">65歳以上限定☆港区 15泊+6通院 5/12(火)から[非喫煙者対象]※単回皮下注射</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 港区</span>
+        <span class="kanto-card-site">生活向上WEB</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥530,000</span>
+        <span class="kanto-card-spec">🏥 15泊 / 🚶 通院6回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://chiken-net.site/products/detail/1003219" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/12(火)</div>
+      <div class="kanto-card-title">【九州/福岡/全国から参加可能（関東在住者は不可）】【福岡観光OK】【BMI基準緩め】【非喫煙者限定】5月12日(火) </div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 福岡市</span>
+        <span class="kanto-card-site">治験ネット</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥291,000</span>
+        <span class="kanto-card-spec">🏥 14泊 / 🚶 通院1回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://www.seikatsu-kojo.jp/clinical/36866.html" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/13(水)</div>
+      <div class="kanto-card-title">東京都 3泊×2回+通院2回 5/13(水)から</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 東京都</span>
+        <span class="kanto-card-site">生活向上WEB</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥174,000</span>
+        <span class="kanto-card-spec">🏥 6泊 / 🚶 通院2回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://chiken-net.site/products/detail/1003216" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/13(水)</div>
+      <div class="kanto-card-title">【関東/東京/新着】【短期ジェネリック治験】【19～44歳】【非喫煙者】5月13日(水)～ 治験開始 4泊×2回</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 関東</span>
+        <span class="kanto-card-site">治験ネット</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥220,000</span>
+        <span class="kanto-card-spec">🏥 8泊</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://chiken-net.site/products/detail/1002961" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/13(水)</div>
+      <div class="kanto-card-title">【関東/東京/新着】【喫煙者可】【18歳～44歳】 5月13日(水)～治験開始 8泊＋通院1回</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 墨田区</span>
+        <span class="kanto-card-site">治験ネット</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥210,000</span>
+        <span class="kanto-card-spec">🏥 8泊 / 🚶 通院1回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://www.seikatsu-kojo.jp/clinical/36865.html" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/14(木)</div>
+      <div class="kanto-card-title">東京都 3泊+通院1回 5/14(木)or5/19(火)から</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 東京都</span>
+        <span class="kanto-card-site">生活向上WEB</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥106,000</span>
+        <span class="kanto-card-spec">🏥 3泊 / 🚶 通院1回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://chiken-net.site/products/detail/1003108" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/14(木)</div>
+      <div class="kanto-card-title">【関東/東京/新着】【短期入院治験】【喫煙者可】【18歳～49歳】5月14日(木)～治験開始 3泊＋通院1回</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 墨田区</span>
+        <span class="kanto-card-site">治験ネット</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥109,000</span>
+        <span class="kanto-card-spec">🏥 3泊 / 🚶 通院1回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://www.chikenweb.jp/chiken_detail.php?id=-1269" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/18(月)</div>
+      <div class="kanto-card-title">【東京】2026年5月18日開始　健康成人を対象としたお薬モニター（6泊7日×2回＋通院4回）／大阪の治験情報を探すなら</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 大阪市</span>
+        <span class="kanto-card-site">治験ウェブ</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥400,000</span>
+        <span class="kanto-card-spec">🏥 6泊 / 🚶 通院4回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://chiken-net.site/products/detail/1003089" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/19(火)</div>
+      <div class="kanto-card-title">【関東/東京/新着】【短期入院治験】【喫煙者可】【18歳～49歳】5月19日(火)～治験開始 3泊＋通院1回</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 墨田区</span>
+        <span class="kanto-card-site">治験ネット</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥109,000</span>
+        <span class="kanto-card-spec">🏥 3泊 / 🚶 通院1回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://chiken-net.site/products/detail/1003211" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/20(水)</div>
+      <div class="kanto-card-title">【関東/東京/新着】【短期入院治験】【18歳～45歳】5月20日(水)～治験開始 4泊＋通院1回</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 墨田区</span>
+        <span class="kanto-card-site">治験ネット</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥114,000</span>
+        <span class="kanto-card-spec">🏥 4泊 / 🚶 通院1回</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://www.seikatsu-kojo.jp/clinical/36871.html" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/21(木)</div>
+      <div class="kanto-card-title">短期 2泊×2回 5/21(木)から in 横浜</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 横浜市</span>
+        <span class="kanto-card-site">生活向上WEB</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥100,000</span>
+        <span class="kanto-card-spec">🏥 4泊</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://www.seikatsu-kojo.jp/clinical/36839.html" target="_blank" rel="noopener">
+      <div class="kanto-card-date">5/24(日)</div>
+      <div class="kanto-card-title">横浜 2泊×2回 5/24(日)から</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 横浜市</span>
+        <span class="kanto-card-site">生活向上WEB</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥100,000</span>
+        <span class="kanto-card-spec">🏥 4泊</span>
+      </div>
+    </a>
+<a class="kanto-card" href="https://www.seikatsu-kojo.jp/clinical/36414.html" target="_blank" rel="noopener">
+      <div class="kanto-card-date">6/1(月)</div>
+      <div class="kanto-card-title">港区 16泊+3泊+2泊+13通院 6/1(月)から[非喫煙者対象/血圧高めの方]※反復皮下注射</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 港区</span>
+        <span class="kanto-card-site">生活向上WEB</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">¥840,000</span>
+        <span class="kanto-card-spec">🏥 21泊 / 🚶 通院13回</span>
+      </div>
+    </a>
+  </div>
+</div>
+<div class="charts-grid">
     <div class="chart-card">
       <h3>地域別 案件数</h3>
       <canvas id="areaChart"></canvas>
@@ -1565,5 +1874,88 @@ document.querySelectorAll('thead th').forEach((th, idx) => {
 })();
 </script>
 
+<div class="arch-section">
+  <h2>🛠️ このダッシュボードの仕組み</h2>
+  <p class="arch-desc">毎週月曜の朝9時、コンピュータが自動で10サイトの治験募集ページを巡回して情報を集め、見やすい一覧ページを作成します。あなたは何もしなくてOK。Slackに「更新しました」とURLが届きます。</p>
+  <svg class="arch-svg" viewBox="0 0 820 720" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrowGold" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+        <path d="M0,0 L0,8 L10,4 z" fill="#c9a558"/>
+      </marker>
+      <linearGradient id="boxGold" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(201,165,88,0.22)"/>
+        <stop offset="100%" stop-color="rgba(201,165,88,0.08)"/>
+      </linearGradient>
+      <linearGradient id="boxNavy" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(20,38,67,0.85)"/>
+        <stop offset="100%" stop-color="rgba(11,24,44,0.95)"/>
+      </linearGradient>
+      <linearGradient id="boxBlue" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(147,197,253,0.18)"/>
+        <stop offset="100%" stop-color="rgba(147,197,253,0.06)"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Step 1: 治験サイト10社 -->
+    <g>
+      <rect x="60" y="30" width="700" height="100" rx="14" fill="url(#boxNavy)" stroke="rgba(201,165,88,0.45)" stroke-width="1.5"/>
+      <circle cx="100" cy="60" r="18" fill="#c9a558"/>
+      <text x="100" y="66" fill="#0a1c33" font-size="18" font-weight="700" text-anchor="middle">1</text>
+      <text x="135" y="62" fill="#f1e4c6" font-size="16" font-weight="500">📋 治験募集サイト  10社</text>
+      <text x="100" y="100" fill="#a8b8d0" font-size="12">生活向上WEB ・ JCVN ・ 治験ジャパン ・ ニューイング ・ ぺいるーと</text>
+      <text x="100" y="118" fill="#a8b8d0" font-size="12">治験ネット ・ 治験バンク ・ 治験ウェブ ・ 治験情報V-NET ・ ボランティアサーチ</text>
+    </g>
+    <line x1="410" y1="135" x2="410" y2="170" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+    <text x="430" y="158" fill="#c9a558" font-size="12" font-weight="500">📅 毎週月曜  朝9時に自動実行</text>
+
+    <!-- Step 2: scraper -->
+    <g>
+      <rect x="160" y="180" width="500" height="84" rx="14" fill="url(#boxGold)" stroke="#c9a558" stroke-width="1.5"/>
+      <circle cx="200" cy="210" r="18" fill="#c9a558"/>
+      <text x="200" y="216" fill="#0a1c33" font-size="18" font-weight="700" text-anchor="middle">2</text>
+      <text x="235" y="212" fill="#f1e4c6" font-size="16" font-weight="500">🤖 自動巡回 (scraper.py)</text>
+      <text x="200" y="244" fill="#a8b8d0" font-size="12">案件名・開始日・報酬額・入院/通院回数を抽出</text>
+    </g>
+    <line x1="410" y1="265" x2="410" y2="300" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+
+    <!-- Step 3: data.json -->
+    <g>
+      <rect x="160" y="310" width="500" height="84" rx="14" fill="url(#boxNavy)" stroke="rgba(147,197,253,0.4)" stroke-width="1.5"/>
+      <circle cx="200" cy="340" r="18" fill="#93c5fd"/>
+      <text x="200" y="346" fill="#0a1c33" font-size="18" font-weight="700" text-anchor="middle">3</text>
+      <text x="235" y="342" fill="#f1e4c6" font-size="16" font-weight="500">💾 データ統合 (data.json)</text>
+      <text x="200" y="374" fill="#a8b8d0" font-size="12">サイト間重複を排除 ・ 地域名を整形 ・ 入院/通院を分類</text>
+    </g>
+    <line x1="410" y1="395" x2="410" y2="430" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+
+    <!-- Step 4: dashboard generation -->
+    <g>
+      <rect x="160" y="440" width="500" height="84" rx="14" fill="url(#boxGold)" stroke="#c9a558" stroke-width="1.5"/>
+      <circle cx="200" cy="470" r="18" fill="#c9a558"/>
+      <text x="200" y="476" fill="#0a1c33" font-size="18" font-weight="700" text-anchor="middle">4</text>
+      <text x="235" y="472" fill="#f1e4c6" font-size="16" font-weight="500">🎨 ダッシュボード生成</text>
+      <text x="200" y="504" fill="#a8b8d0" font-size="12">関東特集・タイムライン・グラフ・タブを組み立て (index.html)</text>
+    </g>
+    <line x1="410" y1="525" x2="410" y2="560" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+
+    <!-- Step 5: GitHub Pages -->
+    <g>
+      <rect x="160" y="570" width="500" height="84" rx="14" fill="url(#boxBlue)" stroke="rgba(147,197,253,0.5)" stroke-width="1.5"/>
+      <circle cx="200" cy="600" r="18" fill="#93c5fd"/>
+      <text x="200" y="606" fill="#0a1c33" font-size="18" font-weight="700" text-anchor="middle">5</text>
+      <text x="235" y="602" fill="#f1e4c6" font-size="16" font-weight="500">🌐 GitHub Pages で公開</text>
+      <text x="200" y="634" fill="#a8b8d0" font-size="11">https://atsushisugamo-gif.github.io/chiken-dashboard/</text>
+    </g>
+
+    <!-- Final user + Slack -->
+    <line x1="270" y1="654" x2="200" y2="688" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+    <line x1="550" y1="654" x2="620" y2="688" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+    <text x="200" y="710" fill="#f1e4c6" font-size="14" text-anchor="middle">👀 ブラウザで閲覧</text>
+    <text x="620" y="710" fill="#f1e4c6" font-size="14" text-anchor="middle">📱 Slack で通知</text>
+  </svg>
+  <div class="arch-note">
+    <strong style="color:#c9a558;">💡 ポイント:</strong> あなたは Slack 通知を見て URL をタップするだけ。データの取得・集計・整形・公開はすべて自動。1サイトずつ手動で見て回る必要が無くなります。手作業だと約30分かかる作業が、毎週同じ品質で自動的に届きます。
+  </div>
+</div>
 </body>
 </html>

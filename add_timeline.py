@@ -701,6 +701,72 @@ td.date-cell.undated { color: #6b7c93; font-style: italic; opacity: 0.6; }
 
 td.visits { color: #e0bb73; font-variant-numeric: tabular-nums; font-size: 0.82rem; }
 .sub-count { color: #a8b8d0; opacity: 0.7; font-size: 0.78rem; margin-left: 3px; }
+
+/* ── Kanto featured ── */
+.kanto-featured {
+  background: linear-gradient(135deg, rgba(201,165,88,0.12) 0%, rgba(20,38,67,0.7) 50%, rgba(201,165,88,0.08) 100%);
+  border: 1.5px solid rgba(201,165,88,0.45);
+  border-radius: 18px;
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 4px 24px rgba(201,165,88,0.12), inset 0 1px 0 rgba(241,228,198,0.18);
+}
+.kanto-featured::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #c9a558 25%, #f1e4c6 50%, #c9a558 75%, transparent 100%);
+}
+.kanto-banner { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.kanto-banner h2 {
+  font-size: 1.45rem; font-weight: 300; letter-spacing: 0.12em; line-height: 1.2;
+  background: linear-gradient(135deg, #f1e4c6 0%, #c9a558 50%, #f1e4c6 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.kanto-subtitle { color: #cbd5e1; font-size: 0.78rem; opacity: 0.85; letter-spacing: 0.04em; }
+.kanto-badge { background: rgba(201,165,88,0.22); color: #f1e4c6; padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; border: 1px solid rgba(201,165,88,0.5); letter-spacing: 0.06em; }
+.kanto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
+.kanto-card {
+  display: block; background: linear-gradient(145deg, rgba(11,24,44,0.82), rgba(8,20,38,0.95));
+  border: 1px solid rgba(201,165,88,0.22); border-radius: 12px; padding: 14px 16px;
+  text-decoration: none; color: #e9d9b8; transition: all 0.2s; position: relative;
+}
+.kanto-card:hover {
+  transform: translateY(-3px); border-color: #c9a558;
+  box-shadow: 0 10px 28px rgba(201,165,88,0.22), 0 4px 16px rgba(0,0,0,0.4);
+}
+.kanto-card-date { color: #c9a558; font-size: 0.78rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.06em; }
+.kanto-card-title { color: #f1e4c6; font-size: 0.86rem; line-height: 1.45; margin-bottom: 10px; min-height: 2.6em; }
+.kanto-card-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 0.7rem; margin-bottom: 10px; }
+.kanto-card-area { color: #93c5fd; }
+.kanto-card-site { color: #a8b8d0; }
+.kanto-card-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(201,165,88,0.14); }
+.kanto-card-comp { color: #c9a558; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+.kanto-card-spec { color: #a8b8d0; font-size: 0.72rem; }
+
+/* ── Architecture / 仕組み ── */
+.arch-section {
+  background: linear-gradient(145deg, rgba(15,30,52,0.85), rgba(8,20,38,0.95));
+  border: 1px solid rgba(201,165,88,0.18); border-radius: 14px;
+  padding: 28px 32px; margin: 30px 0 24px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.4);
+}
+.arch-section h2 {
+  color: #c9a558; font-size: 1.1rem; font-weight: 500; letter-spacing: 0.12em;
+  margin-bottom: 8px; padding-bottom: 12px; border-bottom: 1px solid rgba(201,165,88,0.2);
+}
+.arch-desc { color: #cbd5e1; font-size: 0.86rem; margin-bottom: 22px; line-height: 1.7; }
+.arch-svg { width: 100%; height: auto; max-height: 720px; display: block; margin: 0 auto; }
+.arch-note { color: #a8b8d0; font-size: 0.78rem; margin-top: 18px; padding: 14px 16px; background: rgba(8,20,38,0.6); border-left: 3px solid #c9a558; border-radius: 4px; line-height: 1.7; }
+
+@media (max-width: 768px) {
+  .kanto-featured { padding: 18px 16px; }
+  .kanto-banner h2 { font-size: 1.15rem; }
+  .kanto-grid { grid-template-columns: 1fr; }
+  .arch-section { padding: 18px 16px; }
+}
+
 '''
 
 # ──────────────────────── Build timeline HTML ────────────────────────
@@ -1236,6 +1302,157 @@ dashboard = _re.sub(
     r"const catCtx = document\.getElementById\('catChart'\)\.getContext\('2d'\);\s*new Chart\(catCtx,\s*\{[\s\S]*?\}\)\s*;",
     '', dashboard)
 print("Removed catChart card + JS")
+
+# ──────────────────────── Kanto featured + Architecture ────────────────────────
+def _is_kanto(item):
+    pref = (item.get('prefecture') or '')
+    title = (item.get('title') or '')
+    text = pref + ' ' + title
+    keys = ('東京', '墨田', '港区', '新宿', '渋谷', '台東', '豊島', '品川',
+            '埼玉', '千葉', '神奈川', '横浜', '茨城', '栃木', '群馬',
+            '上野', '浅草', '池袋', '関東', '都内')
+    return any(k in text for k in keys)
+
+_kanto_items = [it for it in items if _is_kanto(it)]
+_kanto_items = sorted(_kanto_items, key=lambda x: x.get('_start_date') or date.today())
+
+_kanto_cards = []
+for _it in _kanto_items[:18]:
+    _d = _it.get('_start_date')
+    _wd = ['月','火','水','木','金','土','日']
+    _d_str = f"{_d.month}/{_d.day}({_wd[_d.weekday()]})" if _d else '日付未定'
+    _title = esc((_it.get('title') or '')[:60])
+    _url = esc(_it.get('url') or '')
+    _pref = esc(_it.get('prefecture') or '')
+    _site = esc(_it.get('site') or '')
+    _comp = _it.get('compensation_num', 0) or 0
+    _comp_str = f'¥{_comp:,}' if _comp else '—'
+    _n = _it.get('total_nights', 0) or 0
+    _oc = _it.get('outpatient_count', 0) or extract_outpatient_count(_it.get('title',''))
+    _spec = []
+    if _n: _spec.append(f'🏥 {_n}泊')
+    if _oc: _spec.append(f'🚶 通院{_oc}回')
+    _spec_html = ' / '.join(_spec) if _spec else ''
+    _kanto_cards.append(f"""<a class="kanto-card" href="{_url}" target="_blank" rel="noopener">
+      <div class="kanto-card-date">{_d_str}</div>
+      <div class="kanto-card-title">{_title}</div>
+      <div class="kanto-card-meta">
+        <span class="kanto-card-area">📍 {_pref}</span>
+        <span class="kanto-card-site">{_site}</span>
+      </div>
+      <div class="kanto-card-foot">
+        <span class="kanto-card-comp">{_comp_str}</span>
+        <span class="kanto-card-spec">{_spec_html}</span>
+      </div>
+    </a>""")
+
+_kanto_html = f"""<div class="kanto-featured">
+  <div class="kanto-banner">
+    <div>
+      <h2>🌟 関東エリア特集</h2>
+      <div class="kanto-subtitle">Tokyo &amp; 横浜 — このダッシュボード最重要エリア</div>
+    </div>
+    <div class="kanto-badge">全 {len(_kanto_items)} 件</div>
+  </div>
+  <div class="kanto-grid">
+    {chr(10).join(_kanto_cards)}
+  </div>
+</div>
+"""
+
+# Inject Kanto featured BEFORE charts-grid
+dashboard = dashboard.replace('<div class="charts-grid">', _kanto_html + '<div class="charts-grid">', 1)
+print(f"Inserted Kanto featured ({len(_kanto_items)} items)")
+
+# Architecture diagram (SVG flow)
+_arch_html = """<div class="arch-section">
+  <h2>🛠️ このダッシュボードの仕組み</h2>
+  <p class="arch-desc">毎週月曜の朝9時、コンピュータが自動で10サイトの治験募集ページを巡回して情報を集め、見やすい一覧ページを作成します。あなたは何もしなくてOK。Slackに「更新しました」とURLが届きます。</p>
+  <svg class="arch-svg" viewBox="0 0 820 720" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrowGold" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+        <path d="M0,0 L0,8 L10,4 z" fill="#c9a558"/>
+      </marker>
+      <linearGradient id="boxGold" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(201,165,88,0.22)"/>
+        <stop offset="100%" stop-color="rgba(201,165,88,0.08)"/>
+      </linearGradient>
+      <linearGradient id="boxNavy" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(20,38,67,0.85)"/>
+        <stop offset="100%" stop-color="rgba(11,24,44,0.95)"/>
+      </linearGradient>
+      <linearGradient id="boxBlue" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(147,197,253,0.18)"/>
+        <stop offset="100%" stop-color="rgba(147,197,253,0.06)"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Step 1: 治験サイト10社 -->
+    <g>
+      <rect x="60" y="30" width="700" height="100" rx="14" fill="url(#boxNavy)" stroke="rgba(201,165,88,0.45)" stroke-width="1.5"/>
+      <circle cx="100" cy="60" r="18" fill="#c9a558"/>
+      <text x="100" y="66" fill="#0a1c33" font-size="18" font-weight="700" text-anchor="middle">1</text>
+      <text x="135" y="62" fill="#f1e4c6" font-size="16" font-weight="500">📋 治験募集サイト  10社</text>
+      <text x="100" y="100" fill="#a8b8d0" font-size="12">生活向上WEB ・ JCVN ・ 治験ジャパン ・ ニューイング ・ ぺいるーと</text>
+      <text x="100" y="118" fill="#a8b8d0" font-size="12">治験ネット ・ 治験バンク ・ 治験ウェブ ・ 治験情報V-NET ・ ボランティアサーチ</text>
+    </g>
+    <line x1="410" y1="135" x2="410" y2="170" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+    <text x="430" y="158" fill="#c9a558" font-size="12" font-weight="500">📅 毎週月曜  朝9時に自動実行</text>
+
+    <!-- Step 2: scraper -->
+    <g>
+      <rect x="160" y="180" width="500" height="84" rx="14" fill="url(#boxGold)" stroke="#c9a558" stroke-width="1.5"/>
+      <circle cx="200" cy="210" r="18" fill="#c9a558"/>
+      <text x="200" y="216" fill="#0a1c33" font-size="18" font-weight="700" text-anchor="middle">2</text>
+      <text x="235" y="212" fill="#f1e4c6" font-size="16" font-weight="500">🤖 自動巡回 (scraper.py)</text>
+      <text x="200" y="244" fill="#a8b8d0" font-size="12">案件名・開始日・報酬額・入院/通院回数を抽出</text>
+    </g>
+    <line x1="410" y1="265" x2="410" y2="300" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+
+    <!-- Step 3: data.json -->
+    <g>
+      <rect x="160" y="310" width="500" height="84" rx="14" fill="url(#boxNavy)" stroke="rgba(147,197,253,0.4)" stroke-width="1.5"/>
+      <circle cx="200" cy="340" r="18" fill="#93c5fd"/>
+      <text x="200" y="346" fill="#0a1c33" font-size="18" font-weight="700" text-anchor="middle">3</text>
+      <text x="235" y="342" fill="#f1e4c6" font-size="16" font-weight="500">💾 データ統合 (data.json)</text>
+      <text x="200" y="374" fill="#a8b8d0" font-size="12">サイト間重複を排除 ・ 地域名を整形 ・ 入院/通院を分類</text>
+    </g>
+    <line x1="410" y1="395" x2="410" y2="430" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+
+    <!-- Step 4: dashboard generation -->
+    <g>
+      <rect x="160" y="440" width="500" height="84" rx="14" fill="url(#boxGold)" stroke="#c9a558" stroke-width="1.5"/>
+      <circle cx="200" cy="470" r="18" fill="#c9a558"/>
+      <text x="200" y="476" fill="#0a1c33" font-size="18" font-weight="700" text-anchor="middle">4</text>
+      <text x="235" y="472" fill="#f1e4c6" font-size="16" font-weight="500">🎨 ダッシュボード生成</text>
+      <text x="200" y="504" fill="#a8b8d0" font-size="12">関東特集・タイムライン・グラフ・タブを組み立て (index.html)</text>
+    </g>
+    <line x1="410" y1="525" x2="410" y2="560" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+
+    <!-- Step 5: GitHub Pages -->
+    <g>
+      <rect x="160" y="570" width="500" height="84" rx="14" fill="url(#boxBlue)" stroke="rgba(147,197,253,0.5)" stroke-width="1.5"/>
+      <circle cx="200" cy="600" r="18" fill="#93c5fd"/>
+      <text x="200" y="606" fill="#0a1c33" font-size="18" font-weight="700" text-anchor="middle">5</text>
+      <text x="235" y="602" fill="#f1e4c6" font-size="16" font-weight="500">🌐 GitHub Pages で公開</text>
+      <text x="200" y="634" fill="#a8b8d0" font-size="11">https://atsushisugamo-gif.github.io/chiken-dashboard/</text>
+    </g>
+
+    <!-- Final user + Slack -->
+    <line x1="270" y1="654" x2="200" y2="688" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+    <line x1="550" y1="654" x2="620" y2="688" stroke="#c9a558" stroke-width="2.5" marker-end="url(#arrowGold)"/>
+    <text x="200" y="710" fill="#f1e4c6" font-size="14" text-anchor="middle">👀 ブラウザで閲覧</text>
+    <text x="620" y="710" fill="#f1e4c6" font-size="14" text-anchor="middle">📱 Slack で通知</text>
+  </svg>
+  <div class="arch-note">
+    <strong style="color:#c9a558;">💡 ポイント:</strong> あなたは Slack 通知を見て URL をタップするだけ。データの取得・集計・整形・公開はすべて自動。1サイトずつ手動で見て回る必要が無くなります。手作業だと約30分かかる作業が、毎週同じ品質で自動的に届きます。
+  </div>
+</div>
+"""
+
+# Inject architecture section right before </body>
+dashboard = dashboard.replace('</body>', _arch_html + '</body>', 1)
+print("Inserted architecture section")
 
 # ──────────────────────── Write outputs ────────────────────────
 with open(OUT_DASHBOARD, 'w') as f:
