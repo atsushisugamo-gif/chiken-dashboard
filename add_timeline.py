@@ -290,12 +290,37 @@ def recalc_nights_from_title(title):
     return total, ('+'.join(desc) if len(desc) > 1 else None)
 
 def extract_outpatient_count(title):
-    """Extract total 通院/通所/来院 count from title (for backward compat)."""
+    """Extract total 通院/通所/来院/来所 count from title."""
     if not title:
         return 0
     n = 0
-    for m in re.finditer(r'通院\s*(\d+)\s*回?|(\d+)\s*通院\s*回?|通所\s*(\d+)\s*回?|来院\s*(\d+)\s*回?', title):
+    for m in re.finditer(r'通院\s*(\d+)\s*回?|(\d+)\s*通院\s*回?|通所\s*(\d+)\s*回?|来院\s*(\d+)\s*回?|来所\s*(\d+)\s*回?', title):
         n += next((int(g) for g in m.groups() if g), 0)
+    # If keyword present but no number was extracted, count as 1
+    if n == 0 and any(k in title for k in ('通院', '通所', '来院', '来所')):
+        n = 1
+    return n
+
+def extract_pre_check_count(title):
+    """Pre-trial check (事前検査) count. Default 1 when keyword present without number."""
+    if not title:
+        return 0
+    n = 0
+    for m in re.finditer(r'事前検査\s*(\d+)\s*回?', title):
+        n += int(m.group(1))
+    if n == 0 and '事前検査' in title:
+        n = 1
+    return n
+
+def extract_post_check_count(title):
+    """Post-trial check (事後検査) count. Default 1 when keyword present without number."""
+    if not title:
+        return 0
+    n = 0
+    for m in re.finditer(r'事後検査\s*(\d+)\s*回?', title):
+        n += int(m.group(1))
+    if n == 0 and '事後検査' in title:
+        n = 1
     return n
 
 def has_outpatient_in_title(title):
@@ -371,27 +396,39 @@ def is_at_home_trial(item):
     t = (item.get('title') or '')
     return any(k in t for k in ('在宅モニター', '在宅試験', '在宅治験', '通信モニター'))
 
-OUTPATIENT_FEE = 10000  # 通院1回 = ¥10,000 として控除
+OUTPATIENT_FEE = 10000  # 通院/通所/来院/来所 1回 = ¥10,000
+PRE_CHECK_FEE  = 3000   # 事前検査 1回 = ¥3,000
+POST_CHECK_FEE = 5000   # 事後検査 1回 = ¥5,000
 
 def daily_rate(item):
-    """Per-night inpatient rate after deducting outpatient cost.
-    rate = (compensation - outpatient_count * ¥10,000) / nights
+    """Per-night inpatient rate after deducting outpatient + check costs.
     
-    Returns 0 (suppressed → displayed as '—') for:
+    rate = (compensation
+            − 通院/通所/来院/来所 × ¥10,000
+            − 事前検査 × ¥3,000
+            − 事後検査 × ¥5,000) / 入院泊数
+    
+    Returns 0 (displayed as '—') for:
       - At-home / 在宅 trials
-      - 通院-only trials (no nights)
-      - After subtraction, remaining ≤ 0 or out of sanity bounds [3K, 100K]/泊
+      - Trials with no nights (visit-only)
+      - After deductions, remaining ≤ 0 or out of sanity bounds [3K, 100K]/泊
     """
     if is_at_home_trial(item):
         return 0
+    title = item.get('title', '') or ''
     n = item.get('total_nights') or item.get('nights') or 0
     oc = item.get('outpatient_count')
     if oc is None:
-        oc = extract_outpatient_count(item.get('title', ''))
+        oc = extract_outpatient_count(title)
+    pre  = extract_pre_check_count(title)
+    post = extract_post_check_count(title)
     comp = item.get('compensation_num', 0) or 0
     if not n or comp <= 0:
         return 0
-    inpatient_comp = comp - (oc or 0) * OUTPATIENT_FEE
+    inpatient_comp = (comp
+                      - (oc or 0) * OUTPATIENT_FEE
+                      - pre * PRE_CHECK_FEE
+                      - post * POST_CHECK_FEE)
     if inpatient_comp <= 0:
         return 0
     rate = inpatient_comp // n
@@ -1044,7 +1081,7 @@ html_parts = [f'''
             <th>負担軽減費</th>
             <th>入院</th>
             <th>通院</th>
-            <th title="(報酬 − 通院回数×¥10,000) ÷ 入院泊数">1泊単価 ⓘ</th>
+            <th title="(報酬 − 通院×¥10,000 − 事前検査×¥3,000 − 事後検査×¥5,000) ÷ 入院泊数">1泊単価 ⓘ</th>
           </tr>
         </thead>
         <tbody>
@@ -1172,8 +1209,8 @@ if kpi_end in dashboard:
 
 # ──── Add click count header to mainTable ────
 dashboard = dashboard.replace(
-    '<th data-col="7" title="(報酬 − 通院回数×¥10,000) ÷ 入院泊数">1泊単価 ⓘ</th>',
-    '<th data-col="7" title="(報酬 − 通院回数×¥10,000) ÷ 入院泊数">1泊単価 ⓘ</th>\n          <th data-col="8" style="text-align:center;width:70px;">👆</th>'
+    '<th data-col="7" title="(報酬 − 通院×¥10,000 − 事前検査×¥3,000 − 事後検査×¥5,000) ÷ 入院泊数">1泊単価 ⓘ</th>',
+    '<th data-col="7" title="(報酬 − 通院×¥10,000 − 事前検査×¥3,000 − 事後検査×¥5,000) ÷ 入院泊数">1泊単価 ⓘ</th>\n          <th data-col="8" style="text-align:center;width:70px;">👆</th>'
 )
 print("Added click column header to mainTable")
 
@@ -1400,7 +1437,7 @@ new_main_html = f"""{_tabs_html}<table id="mainTable">
           <th data-col="4">負担軽減費</th>
           <th data-col="5">入院</th>
           <th data-col="6">通院</th>
-          <th data-col="7" title="(報酬 − 通院回数×¥10,000) ÷ 入院泊数">1泊単価 ⓘ</th>
+          <th data-col="7" title="(報酬 − 通院×¥10,000 − 事前検査×¥3,000 − 事後検査×¥5,000) ÷ 入院泊数">1泊単価 ⓘ</th>
         </tr>
       </thead>
       <tbody>
@@ -1746,14 +1783,20 @@ _ppn_by_region = {}
 for _it in items:
     if is_at_home_trial(_it):
         continue
+    _title = _it.get('title','') or ''
     _n = _it.get('total_nights') or _it.get('nights') or 0
     _oc = _it.get('outpatient_count')
     if _oc is None:
-        _oc = extract_outpatient_count(_it.get('title',''))
+        _oc = extract_outpatient_count(_title)
+    _pre  = extract_pre_check_count(_title)
+    _post = extract_post_check_count(_title)
     _comp = _it.get('compensation_num', 0) or 0
     if not _n or _comp <= 0:
         continue
-    _inpatient_comp = _comp - (_oc or 0) * OUTPATIENT_FEE
+    _inpatient_comp = (_comp
+                       - (_oc or 0) * OUTPATIENT_FEE
+                       - _pre * PRE_CHECK_FEE
+                       - _post * POST_CHECK_FEE)
     if _inpatient_comp <= 0:
         continue
     _r = _region_for_chart(_it)
@@ -1776,8 +1819,8 @@ _ppn_borders = ['#f1e4c6' if r == '東京' else '#93c5fd' for r, _, _ in _ppn_av
 _ppn_chart_card = """    <div class="chart-card">
       <h3>地域別 1泊単価 — 東京 強調</h3>
       <div class="formula-note">
-        <span class="formula">(報酬 − 通院回数 × ¥10,000) ÷ 入院泊数</span>
-        <span class="formula-desc">通院費を分離した純粋な泊単価。地域の加重平均で算出。</span>
+        <span class="formula">(報酬 − 通院×¥10K − 事前検査×¥3K − 事後検査×¥5K) ÷ 入院泊数</span>
+        <span class="formula-desc">通院費・検査費を分離した純粋な泊単価（地域の加重平均）。<br>通院/通所/来院/来所=¥10,000 ・ 事前検査=¥3,000 ・ 事後検査=¥5,000 で控除。</span>
       </div>
       <canvas id="ppnChart"></canvas>
     </div>"""

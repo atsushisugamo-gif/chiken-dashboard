@@ -639,8 +639,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
         <span class="kanto-card-site">治験ジャパン</span>
       </div>
       <div class="kanto-card-foot">
-        <span class="kanto-card-comp">¥138,000<span class="kanto-card-rate">¥46,000/日</span></span>
-        <span class="kanto-card-spec">🏥 3泊</span>
+        <span class="kanto-card-comp">¥138,000<span class="kanto-card-rate">¥34,333/日</span></span>
+        <span class="kanto-card-spec">🏥 3泊 / 🚶 通院3回</span>
       </div>
     </a>
 <a class="kanto-card" href="https://chiken-japan.co.jp/project/5530" target="_blank" rel="noopener">
@@ -675,7 +675,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
         <span class="kanto-card-site">治験情報V-NET</span>
       </div>
       <div class="kanto-card-foot">
-        <span class="kanto-card-comp">¥60,000<span class="kanto-card-rate">¥10,000/日</span></span>
+        <span class="kanto-card-comp">¥60,000<span class="kanto-card-rate">¥7,333/日</span></span>
         <span class="kanto-card-spec">🏥 3泊 / 🚶 通院3回</span>
       </div>
     </a>
@@ -706,8 +706,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
         <div class="chart-card">
       <h3>地域別 1泊単価 — 東京 強調</h3>
       <div class="formula-note">
-        <span class="formula">(報酬 − 通院回数 × ¥10,000) ÷ 入院泊数</span>
-        <span class="formula-desc">通院費を分離した純粋な泊単価。地域の加重平均で算出。</span>
+        <span class="formula">(報酬 − 通院×¥10K − 事前検査×¥3K − 事後検査×¥5K) ÷ 入院泊数</span>
+        <span class="formula-desc">通院費・検査費を分離した純粋な泊単価（地域の加重平均）。<br>通院/通所/来院/来所=¥10,000 ・ 事前検査=¥3,000 ・ 事後検査=¥5,000 で控除。</span>
       </div>
       <canvas id="ppnChart"></canvas>
     </div>
@@ -874,7 +874,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
             <th>負担軽減費</th>
             <th>入院</th>
             <th>通院</th>
-            <th title="(報酬 − 通院回数×¥10,000) ÷ 入院泊数">1泊単価 ⓘ</th>
+            <th title="(報酬 − 通院×¥10,000 − 事前検査×¥3,000 − 事後検査×¥5,000) ÷ 入院泊数">1泊単価 ⓘ</th>
           </tr>
         </thead>
         <tbody>
@@ -929,7 +929,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥25,000</td>
           <td class="nights">1泊</td>
           <td class="visits">—</td>
-          <td class="ppn">¥25,000</td>
+          <td class="ppn">¥22,000</td>
         </tr>
         <tr data-ttype="入院+通院" data-row-date="2026-05-09">
           <td class="date-cell soon">5/9(土)</td>
@@ -1638,7 +1638,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥205,000</td>
           <td class="nights">8泊</td>
           <td class="visits">—</td>
-          <td class="ppn">¥25,625</td>
+          <td class="ppn">¥25,250</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1738,7 +1738,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥141,648</td>
           <td class="nights">4泊</td>
           <td class="visits">—</td>
-          <td class="ppn">¥35,412</td>
+          <td class="ppn">¥34,662</td>
         </tr>
         <tr class="hidden" data-ttype="入院のみ">
           <td class="date-cell undated">未定</td>
@@ -1797,8 +1797,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">豊島区</span></td>
           <td class="comp">¥138,000</td>
           <td class="nights">3泊</td>
-          <td class="visits">—</td>
-          <td class="ppn">¥46,000</td>
+          <td class="visits">3回</td>
+          <td class="ppn">¥34,333</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
           <td class="date-cell undated">未定</td>
@@ -1928,7 +1928,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥60,000</td>
           <td class="nights">3泊</td>
           <td class="visits">3回</td>
-          <td class="ppn">¥10,000</td>
+          <td class="ppn">¥7,333</td>
         </tr>
         <tr class="hidden" data-ttype="通院のみ">
           <td class="date-cell undated">未定</td>
@@ -1937,7 +1937,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥40,000</td>
           <td class="nights">—</td>
-          <td class="visits">あり</td>
+          <td class="visits">1回</td>
           <td class="ppn">—</td>
         </tr>
         <tr class="hidden" data-ttype="入院+通院">
@@ -2008,7 +2008,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <th data-col="4">負担軽減費</th>
           <th data-col="5">入院</th>
           <th data-col="6">通院</th>
-          <th data-col="7" title="(報酬 − 通院回数×¥10,000) ÷ 入院泊数">1泊単価 ⓘ</th>
+          <th data-col="7" title="(報酬 − 通院×¥10,000 − 事前検査×¥3,000 − 事後検査×¥5,000) ÷ 入院泊数">1泊単価 ⓘ</th>
         </tr>
       </thead>
       <tbody>
@@ -2530,7 +2530,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥205,000</td>
           <td class="nights">4泊×2回</td>
           <td class="visits">—</td>
-          <td class="ppn">¥25,625</td>
+          <td class="ppn">¥25,250</td>
         </tr>
         <tr class="item-row" data-site="治験ジャパン" data-area="不明" data-ttype="入院のみ">
           <td>53</td>
@@ -2710,7 +2710,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥141,648</td>
           <td class="nights">4泊</td>
           <td class="visits">—</td>
-          <td class="ppn">¥35,412</td>
+          <td class="ppn">¥34,662</td>
         </tr>
         <tr class="item-row" data-site="ぺいるーと" data-area="上尾市" data-ttype="入院のみ">
           <td>71</td>
@@ -2769,8 +2769,8 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">豊島区</span></td>
           <td class="comp">¥138,000</td>
           <td class="nights">3泊</td>
-          <td class="visits">—</td>
-          <td class="ppn">¥46,000</td>
+          <td class="visits">3回</td>
+          <td class="ppn">¥34,333</td>
         </tr>
         <tr class="item-row" data-site="治験ジャパン" data-area="福岡市" data-ttype="入院+通院">
           <td>77</td>
@@ -3040,7 +3040,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥60,000</td>
           <td class="nights">3泊</td>
           <td class="visits">3回</td>
-          <td class="ppn">¥10,000</td>
+          <td class="ppn">¥7,333</td>
         </tr>
         <tr class="item-row" data-site="治験情報V-NET" data-area="東京都" data-ttype="通院のみ">
           <td>104</td>
@@ -3049,7 +3049,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td><span class="badge badge-area">東京都</span></td>
           <td class="comp">¥40,000</td>
           <td class="nights">—</td>
-          <td class="visits">あり</td>
+          <td class="visits">1回</td>
           <td class="ppn">—</td>
         </tr>
         <tr class="item-row" data-site="治験ネット" data-area="台東区" data-ttype="入院のみ">
@@ -3060,7 +3060,7 @@ a.unvisited::before { content: ''; display: inline-block; width: 6px; height: 6p
           <td class="comp">¥25,000</td>
           <td class="nights">1泊</td>
           <td class="visits">—</td>
-          <td class="ppn">¥25,000</td>
+          <td class="ppn">¥22,000</td>
         </tr>
         <tr class="item-row" data-site="治験ジャパン" data-area="墨田区" data-ttype="入院+通院">
           <td>106</td>
@@ -3129,7 +3129,7 @@ new Chart(ppnCtx, {
     labels: ["北海道 (n=6)", "東京 (n=41)", "その他 (n=8)", "九州・沖縄 (n=25)", "関西 (n=6)", "関東(その他) (n=16)"],
     datasets: [{
       label: '1泊単価 (¥/泊・通院費控除後)',
-      data: [30000, 29294, 25036, 24854, 22361, 20092],
+      data: [30000, 29142, 24992, 24854, 22361, 20092],
       backgroundColor: ["#6b8db8", "#c9a558", "#6b8db8", "#6b8db8", "#6b8db8", "#6b8db8"],
       borderColor: ["#93c5fd", "#f1e4c6", "#93c5fd", "#93c5fd", "#93c5fd", "#93c5fd"],
       borderWidth: 1.5, borderRadius: 4
