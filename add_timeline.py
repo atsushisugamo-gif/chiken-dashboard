@@ -103,6 +103,52 @@ print("Saved prev_data.json for next comparison")
 
 print(f"New: {new_count}, Updated: {updated_count}, Unchanged: {len(items)-new_count-updated_count}")
 
+# ──────────────────────── Trial type helpers (added) ────────────────────────
+def extract_outpatient_count(title):
+    """Extract total 通院/通所/来院 count from title (for backward compat)."""
+    if not title:
+        return 0
+    n = 0
+    for m in re.finditer(r'通院\s*(\d+)\s*回?|(\d+)\s*通院\s*回?|通所\s*(\d+)\s*回?|来院\s*(\d+)\s*回?', title):
+        n += next((int(g) for g in m.groups() if g), 0)
+    return n
+
+def has_outpatient_in_title(title):
+    return bool(title) and any(k in title for k in ('通院', '通所', '来院'))
+
+def derive_trial_type(item):
+    """Compute trial_type_combined from item (uses fields if present, else falls back to title)."""
+    has_in = bool(item.get('has_inpatient')) or (item.get('total_nights') or item.get('nights') or 0) > 0
+    has_out = bool(item.get('has_outpatient')) or has_outpatient_in_title(item.get('title', ''))
+    if has_in and has_out: return '入院+通院'
+    if has_out: return '通院のみ'
+    if has_in: return '入院のみ'
+    return '不明'
+
+def build_composition_str(item):
+    """Build display string like '5泊' / '3泊+通院1回' / '通院2回'."""
+    n = item.get('total_nights') or item.get('nights') or 0
+    oc = item.get('outpatient_count')
+    if oc is None:
+        oc = extract_outpatient_count(item.get('title', ''))
+    has_out = bool(item.get('has_outpatient')) or has_outpatient_in_title(item.get('title', ''))
+    parts = []
+    if n: parts.append(f'{n}泊')
+    if oc: parts.append(f'通院{oc}回')
+    elif has_out: parts.append('通院あり')
+    return '+'.join(parts) if parts else '—'
+
+def trial_type_badges(item):
+    """Tiny badges shown next to title. Returns HTML."""
+    tt = derive_trial_type(item)
+    if tt == '入院+通院':
+        return '<span class="tt-badge tt-in">🏥入院</span><span class="tt-badge tt-out">🚶通院</span>'
+    if tt == '通院のみ':
+        return '<span class="tt-badge tt-out">🚶通院のみ</span>'
+    if tt == '入院のみ':
+        return '<span class="tt-badge tt-in">🏥入院のみ</span>'
+    return ''
+
 # ──────────────────────── Date extraction ────────────────────────
 def extract_date(title):
     m = re.search(r'(\d{4})\.(\d{2})\.(\d{2})', title)
@@ -133,6 +179,11 @@ def extract_date(title):
 for item in items:
     item['_start_date'] = extract_date(item['title'])
 
+# Filter: keep only trials starting today or later (drop past + undated)
+_before_filter = len(items)
+items = [it for it in items if it.get('_start_date') and it['_start_date'] >= TODAY]
+print(f"Date filter: {_before_filter} -> {len(items)} items (kept future-starting only)")
+
 # ──────────────────────── Build timeline data ────────────────────────
 timeline_items = []
 for item in items:
@@ -142,6 +193,10 @@ for item in items:
         'prefecture': item.get('prefecture', '不明'),
         'compensation_num': item.get('compensation_num', 0),
         'nights': item.get('total_nights') or item.get('nights'),
+        'total_nights': item.get('total_nights') or item.get('nights'),
+        'outpatient_count': item.get('outpatient_count'),
+        'has_outpatient': item.get('has_outpatient'),
+        'has_inpatient': item.get('has_inpatient'),
         'price_per_night': item.get('price_per_night'),
         'site': item.get('site', ''),
         'source_sites': item.get('source_sites', [item.get('site', '')]),
@@ -193,261 +248,236 @@ def status_badge(status):
 # ──────────────────────── New CSS (full replacement) ────────────────────────
 NEW_CSS = '''* { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: -apple-system, 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
-  background: linear-gradient(160deg, #0a0e27 0%, #0f1b3d 30%, #141230 60%, #0d0f1a 100%);
+  font-family: -apple-system, 'SF Pro Display', 'Hiragino Mincho ProN', 'Yu Mincho', 'Yu Gothic', sans-serif;
+  background: radial-gradient(ellipse at top, #102845 0%, #0a1c33 35%, #061325 70%, #030a18 100%);
   background-attachment: fixed;
-  color: #e2e8f0;
+  color: #e9d9b8;
   line-height: 1.6;
   min-height: 100vh;
+  letter-spacing: 0.01em;
 }
 
+::selection { background: rgba(201,165,88,0.4); color: #fff; }
+
 .header {
-  background: linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(139,92,246,0.12) 50%, rgba(236,72,153,0.08) 100%);
-  backdrop-filter: blur(12px);
-  padding: 20px 32px;
-  border-bottom: 1px solid rgba(139,92,246,0.25);
+  background: linear-gradient(135deg, rgba(201,165,88,0.12) 0%, rgba(30,58,95,0.25) 50%, rgba(13,28,46,0.4) 100%);
+  backdrop-filter: blur(14px);
+  padding: 22px 36px;
+  border-bottom: 1px solid rgba(201,165,88,0.3);
+  box-shadow: 0 1px 0 rgba(201,165,88,0.08), 0 8px 24px rgba(0,0,0,0.4);
   display: flex; justify-content: space-between; align-items: center;
 }
 .header h1 {
-  font-size: 1.3rem;
-  background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: #f1e4c6;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #e0bb73 0%, #f1e4c6 50%, #c9a558 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.header .meta { color: #7c8db5; font-size: 0.8rem; }
-.container { max-width: 1440px; margin: 0 auto; padding: 20px; }
+.header .meta { color: #a8b8d0; font-size: 0.78rem; letter-spacing: 0.05em; }
+.header .meta .pipe { color: rgba(201,165,88,0.4); margin: 0 8px; }
 
-/* KPI Cards */
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.kpi {
-  background: linear-gradient(145deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9));
-  border-radius: 12px; padding: 16px;
-  border: 1px solid rgba(100,116,139,0.2);
-  backdrop-filter: blur(8px);
-  transition: transform 0.2s, border-color 0.2s;
-}
-.kpi:hover { transform: translateY(-2px); border-color: rgba(139,92,246,0.4); }
-.kpi .label { font-size: 0.72rem; color: #7c8db5; text-transform: uppercase; letter-spacing: 0.5px; }
-.kpi .value { font-size: 1.7rem; font-weight: 700; color: #60a5fa; margin-top: 2px; }
-.kpi .value.green { color: #4ade80; }
-.kpi .value.amber { background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.kpi .value.purple { background: linear-gradient(135deg, #a78bfa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.kpi .sub { font-size: 0.72rem; color: #7c8db5; margin-top: 2px; }
+.container { padding: 28px 32px 60px; max-width: 1400px; margin: 0 auto; }
 
-/* Section */
-.section {
-  background: linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.8));
-  border-radius: 12px; padding: 18px;
-  border: 1px solid rgba(100,116,139,0.2);
-  margin-bottom: 16px;
-  backdrop-filter: blur(8px);
-}
-.section h3 { font-size: 0.95rem; color: #f1f5f9; margin-bottom: 12px; border-bottom: 1px solid rgba(100,116,139,0.2); padding-bottom: 8px; }
-
-/* Charts */
-.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-.chart-card {
-  background: linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.8));
-  border-radius: 12px; padding: 16px;
-  border: 1px solid rgba(100,116,139,0.2);
-  backdrop-filter: blur(8px);
-}
-.chart-card h3 { font-size: 0.9rem; color: #f1f5f9; margin-bottom: 10px; }
-canvas { max-height: 260px; }
-
-/* Stats Table */
-.stats-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-.stats-table th { background: linear-gradient(135deg, rgba(51,65,85,0.8), rgba(30,41,59,0.8)); color: #94a3b8; padding: 8px 12px; text-align: center; font-weight: 600; }
-.stats-table td { padding: 8px 12px; border-bottom: 1px solid rgba(41,53,72,0.5); text-align: center; }
-.stats-table tr:hover { background: rgba(59,130,246,0.08); }
-
-/* Filters */
-.filters {
-  background: linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.8));
-  border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;
-  border: 1px solid rgba(100,116,139,0.2);
-  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
-  backdrop-filter: blur(8px);
-}
-.filters label { color: #7c8db5; font-size: 0.8rem; }
-.filters select, .filters input { background: rgba(15,23,42,0.8); color: #e2e8f0; border: 1px solid rgba(71,85,105,0.5); border-radius: 6px; padding: 6px 10px; font-size: 0.82rem; }
-.filters input { width: 220px; }
-.result-count { margin-left: auto; color: #7c8db5; font-size: 0.8rem; }
-
-/* Table */
-.table-wrap {
-  background: linear-gradient(145deg, rgba(30,41,59,0.6), rgba(15,23,42,0.7));
-  border-radius: 12px; overflow: auto;
-  border: 1px solid rgba(100,116,139,0.2); max-height: 70vh;
-}
-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-thead th {
-  background: linear-gradient(135deg, rgba(51,65,85,0.9), rgba(30,41,59,0.9));
-  color: #94a3b8; padding: 10px 12px; text-align: left; font-weight: 600;
-  position: sticky; top: 0; cursor: default; white-space: nowrap; z-index: 1;
-}
-#mainTable thead th { cursor: pointer; }
-#mainTable thead th:hover { color: #e2e8f0; }
-#mainTable thead th.sorted-asc::after { content: ' ▲'; font-size: 0.7rem; }
-#mainTable thead th.sorted-desc::after { content: ' ▼'; font-size: 0.7rem; }
-tbody td { padding: 8px 12px; border-bottom: 1px solid rgba(30,41,59,0.5); }
-tbody tr { background: transparent; transition: background 0.2s; }
-tbody tr:hover { background: rgba(59,130,246,0.08); }
-a { color: #60a5fa; text-decoration: none; }
-a:hover { text-decoration: underline; color: #93c5fd; }
-.badge { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 0.7rem; font-weight: 500; }
-.badge-area { background: linear-gradient(135deg, rgba(30,58,95,0.8), rgba(30,64,115,0.6)); color: #7dd3fc; }
-.badge-site { background: linear-gradient(135deg, rgba(28,56,41,0.8), rgba(20,70,45,0.6)); color: #86efac; }
-.badge-dup { background: linear-gradient(135deg, rgba(74,29,94,0.8), rgba(88,28,135,0.6)); color: #d8b4fe; margin-left: 6px; }
-.badge-new {
-  background: linear-gradient(135deg, #ef4444, #f97316);
-  color: #fff; font-weight: 700; font-size: 0.65rem;
-  padding: 2px 8px; border-radius: 4px; margin-left: 6px;
-  animation: pulse-new 2s ease-in-out infinite;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-}
-.badge-updated {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  color: #fff; font-weight: 700; font-size: 0.65rem;
-  padding: 2px 8px; border-radius: 4px; margin-left: 6px;
-  animation: pulse-upd 2.5s ease-in-out infinite;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-}
-@keyframes pulse-new {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
-  50% { box-shadow: 0 0 8px 3px rgba(239,68,68,0.3); }
-}
-@keyframes pulse-upd {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.5); }
-  50% { box-shadow: 0 0 8px 3px rgba(139,92,246,0.3); }
-}
-tr.row-new { border-left: 3px solid #ef4444; }
-tr.row-updated { border-left: 3px solid #8b5cf6; }
-
-.comp { font-weight: 600; color: #fbbf24; white-space: nowrap; }
-.ppn { font-weight: 600; color: #34d399; white-space: nowrap; }
-.nights { color: #94a3b8; white-space: nowrap; }
-.error-box { background: rgba(69,26,3,0.8); border: 1px solid #78350f; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; color: #fbbf24; font-size: 0.82rem; }
-.hidden { display: none; }
-
-/* Timeline Calendar */
-.timeline-hero {
-  background: linear-gradient(135deg, rgba(30,58,95,0.6) 0%, rgba(88,28,135,0.25) 40%, rgba(236,72,153,0.1) 80%, rgba(15,23,42,0.7) 100%);
-  border-radius: 14px;
-  padding: 24px;
-  border: 1px solid rgba(139,92,246,0.3);
-  margin-bottom: 16px;
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.kpi-card {
+  background: linear-gradient(145deg, rgba(20,38,67,0.8) 0%, rgba(11,24,44,0.9) 100%);
+  border: 1px solid rgba(201,165,88,0.25);
+  border-radius: 12px;
+  padding: 18px 20px;
   position: relative;
   overflow: hidden;
+  box-shadow:
+    0 4px 20px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(201,165,88,0.18);
+  transition: all 0.3s ease;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,165,88,0.5), transparent);
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(201,165,88,0.45);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(201,165,88,0.3);
+}
+.kpi-card .label { color: #a8b8d0; font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
+.kpi-card .value {
+  font-size: 1.8rem;
+  font-weight: 200;
+  background: linear-gradient(135deg, #f1e4c6 0%, #c9a558 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.02em;
+}
+.kpi-card .value.green { background: linear-gradient(135deg, #b8e2c4 0%, #6db896 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.kpi-card .value.purple { background: linear-gradient(135deg, #d4c5e8 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+.charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; margin-bottom: 28px; }
+.chart-card {
+  background: linear-gradient(145deg, rgba(15,30,52,0.85) 0%, rgba(8,20,38,0.92) 100%);
+  border: 1px solid rgba(201,165,88,0.18);
+  border-radius: 14px;
+  padding: 22px 24px;
   backdrop-filter: blur(8px);
+  box-shadow: 0 6px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(201,165,88,0.1);
 }
-.timeline-hero::before {
-  content: '';
-  position: absolute;
-  top: -30%; right: -10%;
-  width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
-  pointer-events: none;
-}
-.timeline-hero::after {
-  content: '';
-  position: absolute;
-  bottom: -20%; left: -5%;
-  width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
-  pointer-events: none;
-}
-.timeline-hero h3 {
-  font-size: 1.15rem;
+.chart-card h3 {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #c9a558;
   margin-bottom: 16px;
-  border-bottom: none; padding-bottom: 0;
-  display: flex; align-items: center; gap: 8px;
-  background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(201,165,88,0.2);
 }
-.tl-stats {
-  display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
-}
-.tl-stat {
-  background: rgba(15,23,42,0.5);
-  border-radius: 8px; padding: 8px 14px; font-size: 0.82rem;
-  border: 1px solid rgba(255,255,255,0.06);
-  backdrop-filter: blur(4px);
-}
-.tl-stat .num { font-weight: 700; }
-.tl-stat .num.blue { color: #60a5fa; }
-.tl-stat .num.gray { color: #94a3b8; }
-.tl-stat .num.purple { color: #c084fc; }
-.tl-stat .num.red { color: #f87171; }
-.tl-stat .num.orange { color: #fb923c; }
 
-.tl-bar-wrap {
-  display: flex; gap: 4px; margin-bottom: 18px;
-  align-items: flex-end; height: 56px; padding: 0 2px;
+.timeline-hero {
+  background: linear-gradient(145deg, rgba(15,30,52,0.85), rgba(8,20,38,0.92));
+  border: 1px solid rgba(201,165,88,0.22);
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.4);
 }
-.tl-bar-item {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  cursor: pointer; transition: transform 0.15s;
-}
-.tl-bar-item:hover { transform: translateY(-3px); }
-.tl-bar-col {
-  width: 100%; min-width: 28px;
-  border-radius: 6px 6px 0 0;
-  transition: opacity 0.15s;
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.15);
-}
-.tl-bar-item:hover .tl-bar-col { opacity: 0.85; }
-.tl-bar-label { font-size: 0.7rem; color: #94a3b8; white-space: nowrap; }
-.tl-bar-count { font-size: 0.72rem; font-weight: 700; color: #e2e8f0; }
+.timeline-hero h3 { color: #c9a558; font-size: 0.95rem; font-weight: 500; margin-bottom: 16px; letter-spacing: 0.1em; }
+.tl-stats { display: flex; gap: 24px; margin-bottom: 18px; flex-wrap: wrap; }
+.tl-stat { display: flex; align-items: baseline; gap: 8px; font-size: 0.82rem; }
+.tl-stat .num { font-weight: 300; font-size: 1.3rem; }
+.tl-stat .num.blue { color: #93c5fd; }
+.tl-stat .num.gray { color: #a8b8d0; }
+.tl-stat .num.gold { color: #c9a558; }
+.tl-stat .num.green { color: #86efac; }
 
-.month-header {
-  cursor: pointer; transition: background 0.15s; user-select: none;
-}
-.month-header:hover { background: rgba(59,130,246,0.12) !important; }
-.month-header td { padding: 12px 16px !important; }
-.month-badge {
-  display: inline-block;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  color: #fff; font-weight: 700; font-size: 0.9rem;
-  padding: 4px 14px; border-radius: 8px; margin-right: 10px;
-  box-shadow: 0 2px 8px rgba(59,130,246,0.3);
-}
-.month-badge.past {
-  background: linear-gradient(135deg, #475569, #64748b);
-  box-shadow: none;
-}
-.month-count { font-weight: 400; color: #94a3b8; font-size: 0.8rem; }
-.month-toggle { float: right; color: #7c8db5; font-size: 0.8rem; transition: transform 0.2s; }
-.month-header.collapsed .month-toggle { transform: rotate(-90deg); }
-.date-cell { white-space: nowrap; font-weight: 700; font-size: 0.88rem; text-align: center; }
-.date-cell.future { color: #fbbf24; }
-.date-cell.past { color: #64748b; }
-.date-cell.soon { color: #f87171; text-shadow: 0 0 6px rgba(248,113,113,0.4); }
-.date-cell.undated { color: #475569; font-weight: 400; font-style: italic; }
+.tt-badge { display: inline-block; padding: 2px 7px; margin-left: 5px; border-radius: 3px; font-size: 0.66rem; font-weight: 600; vertical-align: middle; letter-spacing: 0.05em; }
+.tt-in { background: rgba(147,197,253,0.14); color: #93c5fd; border: 1px solid rgba(147,197,253,0.35); }
+.tt-out { background: rgba(201,165,88,0.18); color: #e0bb73; border: 1px solid rgba(201,165,88,0.4); }
 
-/* Legend for new/updated */
-.status-legend {
-  display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;
+.trial-type-tabs { display: flex; gap: 8px; margin: 14px 0 10px; flex-wrap: wrap; }
+.ttab {
+  background: linear-gradient(145deg, rgba(15,30,52,0.6), rgba(8,20,38,0.7));
+  color: #cbd5e1; border: 1px solid rgba(201,165,88,0.18); border-radius: 8px;
+  padding: 8px 18px; font-size: 0.82rem; cursor: pointer;
+  transition: all 0.2s; letter-spacing: 0.04em;
 }
-.status-legend-item {
-  display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #94a3b8;
+.ttab:hover { background: linear-gradient(145deg, rgba(20,38,67,0.8), rgba(11,24,44,0.9)); border-color: rgba(201,165,88,0.45); }
+.ttab.active {
+  background: linear-gradient(135deg, rgba(201,165,88,0.28) 0%, rgba(201,165,88,0.12) 100%);
+  border-color: #c9a558; color: #f1e4c6; font-weight: 500;
+  box-shadow: 0 2px 12px rgba(201,165,88,0.2), inset 0 1px 0 rgba(201,165,88,0.3);
 }
-.legend-dot {
-  width: 10px; height: 10px; border-radius: 50%;
+.ttab .count { opacity: 0.7; margin-left: 6px; font-size: 0.72rem; }
+.ttype-hidden { display: none !important; }
+
+.filters {
+  background: linear-gradient(145deg, rgba(15,30,52,0.7), rgba(8,20,38,0.85));
+  border: 1px solid rgba(201,165,88,0.18);
+  border-radius: 12px; padding: 14px 18px; margin-bottom: 18px;
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
-.legend-dot.new { background: linear-gradient(135deg, #ef4444, #f97316); }
-.legend-dot.updated { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
-.legend-dot.dup { background: linear-gradient(135deg, #a855f7, #d946ef); }
+.filters label { color: #a8b8d0; font-size: 0.78rem; letter-spacing: 0.05em; }
+.filters select, .filters input {
+  background: rgba(8,20,38,0.85); color: #e9d9b8;
+  border: 1px solid rgba(201,165,88,0.25); border-radius: 8px;
+  padding: 8px 12px; font-size: 0.82rem;
+  transition: border-color 0.2s;
+}
+.filters select:focus, .filters input:focus { border-color: rgba(201,165,88,0.55); outline: none; }
+.filters input { width: 240px; }
+
+table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  background: linear-gradient(145deg, rgba(15,30,52,0.65), rgba(8,20,38,0.85));
+  border: 1px solid rgba(201,165,88,0.18);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+}
+table thead {
+  background: linear-gradient(135deg, rgba(20,38,67,0.95), rgba(11,24,44,0.98));
+  border-bottom: 1px solid rgba(201,165,88,0.3);
+}
+table th {
+  padding: 14px 14px; text-align: left;
+  color: #c9a558; font-weight: 500; font-size: 0.74rem;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  cursor: pointer; user-select: none;
+  border-bottom: 1px solid rgba(201,165,88,0.2);
+}
+table th:hover { color: #e0bb73; background: rgba(201,165,88,0.06); }
+table td {
+  padding: 12px 14px; border-bottom: 1px solid rgba(201,165,88,0.08);
+  font-size: 0.85rem; color: #e9d9b8;
+}
+table tr:hover td { background: rgba(201,165,88,0.04); }
+table tr:last-child td { border-bottom: none; }
+
+table a { color: #f1e4c6; text-decoration: none; transition: color 0.15s; }
+table a:hover { color: #c9a558; }
+table a.unvisited { color: #f1e4c6; }
+table a.unvisited::before { content: '● '; color: #c9a558; font-size: 0.6rem; vertical-align: middle; }
+
+td.comp { color: #c9a558; font-weight: 500; font-variant-numeric: tabular-nums; }
+td.nights { color: #a8b8d0; font-size: 0.8rem; }
+td.ppn { color: #93c5fd; font-variant-numeric: tabular-nums; font-size: 0.82rem; }
+td.date-cell { font-variant-numeric: tabular-nums; font-weight: 500; font-size: 0.82rem; text-align: center; color: #f1e4c6; }
+td.date-cell.past { color: #6b7c93; opacity: 0.5; }
+td.date-cell.soon { color: #fcd34d; font-weight: 600; }
+td.date-cell.undated { color: #6b7c93; font-style: italic; opacity: 0.6; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.04em; }
+.badge-area { background: rgba(201,165,88,0.14); color: #e0bb73; border: 1px solid rgba(201,165,88,0.32); }
+.badge-site { background: rgba(147,197,253,0.12); color: #93c5fd; border: 1px solid rgba(147,197,253,0.3); margin-right: 4px; }
+.badge-dup { background: rgba(167,139,250,0.15); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.3); }
+.badge-new { background: rgba(134,239,172,0.18); color: #86efac; border: 1px solid rgba(134,239,172,0.4); margin-left: 6px; }
+.badge-updated { background: rgba(252,211,77,0.18); color: #fcd34d; border: 1px solid rgba(252,211,77,0.4); margin-left: 6px; }
+
+.row-new { background: rgba(134,239,172,0.05); }
+.row-updated { background: rgba(252,211,77,0.05); }
+.hidden { display: none !important; }
+
+.month-header td {
+  background: linear-gradient(90deg, rgba(201,165,88,0.12), rgba(20,38,67,0.6));
+  color: #c9a558;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-top: 1px solid rgba(201,165,88,0.2);
+}
+
+.click-count {
+  display: inline-block; padding: 1px 7px; border-radius: 10px;
+  font-size: 0.7rem; font-weight: 500; min-width: 20px; text-align: center;
+}
+.click-count.zero { background: rgba(107,124,147,0.15); color: #6b7c93; }
+.click-count.low { background: rgba(147,197,253,0.18); color: #93c5fd; }
+.click-count.mid { background: rgba(201,165,88,0.2); color: #e0bb73; }
+.click-count.high { background: rgba(252,211,77,0.25); color: #fcd34d; }
 
 @media (max-width: 768px) {
+  .header { padding: 14px 18px; }
+  .header h1 { font-size: 1.1rem; }
+  .container { padding: 18px 14px 40px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .kpi-card { padding: 12px 14px; }
+  .kpi-card .value { font-size: 1.4rem; }
   .charts-grid { grid-template-columns: 1fr; }
-  .filters { flex-direction: column; }
+  .filters { flex-direction: column; align-items: stretch; }
   .filters input { width: 100%; }
-  .kpi-grid { grid-template-columns: repeat(3, 1fr); }
-  .tl-stats { gap: 6px; }
-  .tl-stat { padding: 6px 10px; font-size: 0.75rem; }
-  .tl-bar-wrap { height: 40px; }
-}'''
+  table { font-size: 0.76rem; }
+  table th, table td { padding: 8px 6px; }
+}
+'''
 
 # ──────────────────────── Build timeline HTML ────────────────────────
 bar_colors = [
@@ -523,7 +553,7 @@ html_parts = [f'''
             <th>掲載サイト</th>
             <th>地域</th>
             <th>負担軽減費</th>
-            <th>泊数</th>
+            <th>構成</th>
             <th>1泊単価</th>
           </tr>
         </thead>
@@ -533,6 +563,8 @@ html_parts = [f'''
 def build_row(e, date_html, date_class, hidden=False):
     title_esc = esc(e['title'][:80])
     status_html = status_badge(e['status'])
+    tt_badges = trial_type_badges(e)
+    ttype = derive_trial_type(e)
     classes = []
     if e['status'] == 'new': classes.append('row-new')
     elif e['status'] == 'updated': classes.append('row-updated')
@@ -545,15 +577,15 @@ def build_row(e, date_html, date_class, hidden=False):
     else:
         sites_html = f'<span class="badge badge-site">{esc(e["site"])}</span>'
 
-    nights_str = f'{e["nights"]}泊' if e['nights'] else '—'
+    composition = build_composition_str(e)
 
-    return f'''        <tr{row_class}>
+    return f'''        <tr{row_class} data-ttype="{ttype}">
           <td class="{date_class}">{date_html}</td>
-          <td><a href="{esc(e['url'])}" target="_blank">{title_esc}</a>{status_html}</td>
+          <td><a href="{esc(e['url'])}" target="_blank">{title_esc}</a>{tt_badges}{status_html}</td>
           <td>{sites_html}</td>
           <td><span class="badge badge-area">{esc(e['prefecture'])}</span></td>
           <td class="comp">{fmt_comp(e['compensation_num'])}</td>
-          <td class="nights">{nights_str}</td>
+          <td class="nights">{composition}</td>
           <td class="ppn">{fmt_ppn(e['price_per_night'])}</td>
         </tr>
 '''
@@ -709,6 +741,46 @@ TRACKING_JS = '''
 })();
 '''
 dashboard = dashboard.replace('</script>\n</body>', TRACKING_JS + '</script>\n</body>')
+
+TTAB_JS = '''
+<script>
+(function(){
+  function applyFilter(t){
+    document.querySelectorAll('#ttypeTabs .ttab').forEach(b => b.classList.toggle('active', b.dataset.ttype === t));
+    document.querySelectorAll('#mainTable tbody tr').forEach(r => {
+      const tt = r.dataset.ttype || '';
+      r.style.display = (t === 'all' || tt === t) ? '' : 'none';
+    });
+    // Also filter timeline rows (skip month-header rows)
+    document.querySelectorAll('#timelineSection tbody tr').forEach(r => {
+      if (r.classList.contains('month-header')) return;
+      const tt = r.dataset.ttype || '';
+      // Don't fight the existing collapse/hidden logic; just add a separate ttype-hidden
+      if (t === 'all' || tt === t) r.classList.remove('ttype-hidden');
+      else r.classList.add('ttype-hidden');
+    });
+  }
+  function init(){
+    const tabs = document.getElementById('ttypeTabs');
+    if (!tabs) return;
+    tabs.addEventListener('click', e => {
+      const b = e.target.closest('.ttab');
+      if (!b) return;
+      applyFilter(b.dataset.ttype);
+    });
+    // CSS for ttype-hidden (in case not in stylesheet)
+    const s = document.createElement('style');
+    s.textContent = '.ttype-hidden{display:none !important;}';
+    document.head.appendChild(s);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+'''
+dashboard = dashboard.replace('</script>\n</body>', TTAB_JS + '</script>\n</body>')
+
+
 print("Added tracking JavaScript")
 
 # ──────────────────────── Regenerate mainTable from data.json ────────────────────────
@@ -740,17 +812,37 @@ for idx, item in enumerate(items, 1):
     else:
         sites_html = f'<span class="badge badge-site">{site}</span>'
     
-    main_rows.append(f"""        <tr class="{row_class}" data-site="{site}" data-area="{prefecture}">
+    # Trial type info (uses fields if present, else derives from title)
+    _ttype = derive_trial_type(item)
+    _badges = trial_type_badges(item)
+    _composition = build_composition_str(item)
+
+    main_rows.append(f"""        <tr class="{row_class}" data-site="{site}" data-area="{prefecture}" data-ttype="{_ttype}">
           <td>{idx}</td>
-          <td><a href="{url}" target="_blank" rel="noopener">{title_esc}</a>{status_html}</td>
+          <td><a href="{url}" target="_blank" rel="noopener">{title_esc}</a>{_badges}{status_html}</td>
           <td>{sites_html}</td>
           <td><span class="badge badge-area">{prefecture}</span></td>
           <td class="comp">{comp_str}</td>
-          <td class="nights">{nights_str}</td>
+          <td class="nights">{_composition}</td>
           <td class="ppn">{ppn_str}</td>
         </tr>""")
 
-new_main_html = f"""<table id="mainTable">
+# Build trial-type tabs with counts
+_ttype_counts = {'all': len(items), '入院のみ': 0, '入院+通院': 0, '通院のみ': 0}
+for _it in items:
+    _tt = derive_trial_type(_it)
+    if _tt in _ttype_counts:
+        _ttype_counts[_tt] += 1
+_tabs_html = (
+    '<div class="trial-type-tabs" id="ttypeTabs">'
+    f'<button class="ttab active" data-ttype="all">全件<span class="count">{_ttype_counts["all"]}</span></button>'
+    f'<button class="ttab" data-ttype="入院のみ">入院のみ<span class="count">{_ttype_counts["入院のみ"]}</span></button>'
+    f'<button class="ttab" data-ttype="入院+通院">入院+通院<span class="count">{_ttype_counts["入院+通院"]}</span></button>'
+    f'<button class="ttab" data-ttype="通院のみ">通院のみ<span class="count">{_ttype_counts["通院のみ"]}</span></button>'
+    '</div>'
+)
+
+new_main_html = f"""{_tabs_html}<table id="mainTable">
       <thead>
         <tr>
           <th data-col="0">#</th>
@@ -758,7 +850,7 @@ new_main_html = f"""<table id="mainTable">
           <th data-col="2">サイト</th>
           <th data-col="3">地域</th>
           <th data-col="4">負担軽減費</th>
-          <th data-col="5">泊数</th>
+          <th data-col="5">構成</th>
           <th data-col="6">1泊単価</th>
         </tr>
       </thead>
@@ -806,6 +898,114 @@ dashboard = re_mod.sub(header_pattern, replace_header, dashboard, count=1)
 
 # Also update "治験・モニター案件" → "治験入院案件"
 dashboard = dashboard.replace('治験・モニター案件', '治験入院案件', 1)
+
+# ──────────────────────── Regenerate charts dynamically (added) ────────────────────────
+# Region grouping: prefix-match prefecture string to canonical region
+_REGION_MAP = [
+    ('北海道', '北海道'),
+    ('青森県', '東北'), ('岩手県', '東北'), ('宮城県', '東北'), ('秋田県', '東北'), ('山形県', '東北'), ('福島県', '東北'),
+    ('茨城県', '関東'), ('栃木県', '関東'), ('群馬県', '関東'), ('埼玉県', '関東'), ('千葉県', '関東'), ('東京都', '関東'), ('神奈川県', '関東'),
+    ('新潟県', '中部'), ('富山県', '中部'), ('石川県', '中部'), ('福井県', '中部'), ('山梨県', '中部'), ('長野県', '中部'), ('岐阜県', '中部'), ('静岡県', '中部'), ('愛知県', '中部'),
+    ('三重県', '関西'), ('滋賀県', '関西'), ('京都府', '関西'), ('大阪府', '関西'), ('兵庫県', '関西'), ('奈良県', '関西'), ('和歌山県', '関西'),
+    ('鳥取県', '中国・四国'), ('島根県', '中国・四国'), ('岡山県', '中国・四国'), ('広島県', '中国・四国'), ('山口県', '中国・四国'),
+    ('徳島県', '中国・四国'), ('香川県', '中国・四国'), ('愛媛県', '中国・四国'), ('高知県', '中国・四国'),
+    ('福岡県', '九州・沖縄'), ('佐賀県', '九州・沖縄'), ('長崎県', '九州・沖縄'), ('熊本県', '九州・沖縄'), ('大分県', '九州・沖縄'), ('宮崎県', '九州・沖縄'), ('鹿児島県', '九州・沖縄'), ('沖縄県', '九州・沖縄'),
+    # short forms / city-only
+    ('東京', '関東'), ('横浜', '関東'), ('新宿', '関東'), ('港区', '関東'), ('渋谷', '関東'), ('品川', '関東'), ('墨田', '関東'), ('豊島', '関東'), ('台東', '関東'), ('浅草', '関東'), ('池袋', '関東'),
+    ('大阪', '関西'), ('京都', '関西'), ('神戸', '関西'), ('奈良', '関西'),
+    ('福岡', '九州・沖縄'), ('熊本', '九州・沖縄'), ('長崎', '九州・沖縄'),
+    ('名古屋', '中部'), ('愛知', '中部'),
+    ('札幌', '北海道'),
+]
+
+def _region_of(item):
+    pref = item.get('prefecture', '') or ''
+    title = item.get('title', '') or ''
+    text = f"{pref} {title}"
+    for needle, region in _REGION_MAP:
+        if needle in text:
+            return region
+    return '不明'
+
+# Build distributions
+from collections import Counter as _Counter
+_area_counts = _Counter(_region_of(it) for it in items)
+_area_order = ['関東', '関西', '中部', '九州・沖縄', '中国・四国', '東北', '北海道', '不明']
+_area_labels = [r for r in _area_order if _area_counts.get(r, 0) > 0]
+_area_data = [_area_counts.get(r, 0) for r in _area_labels]
+
+# Compensation buckets
+_comp_buckets = [('〜5万', 0, 50000), ('5〜10万', 50000, 100000), ('10〜20万', 100000, 200000),
+                 ('20〜50万', 200000, 500000), ('50万〜', 500000, 10**9)]
+_comp_data = []
+_comp_labels = []
+_unknown = 0
+for it in items:
+    c = it.get('compensation_num', 0) or 0
+    if c <= 0:
+        _unknown += 1
+for label, lo, hi in _comp_buckets:
+    cnt = sum(1 for it in items if lo <= (it.get('compensation_num', 0) or 0) < hi)
+    _comp_labels.append(label); _comp_data.append(cnt)
+if _unknown > 0:
+    _comp_labels.append('不明'); _comp_data.append(_unknown)
+
+# Site distribution (sorted by count desc)
+_site_counter = _Counter(it.get('site', '') for it in items if it.get('site'))
+_site_pairs = _site_counter.most_common()
+_site_labels = [s for s, _ in _site_pairs]
+_site_data = [n for _, n in _site_pairs]
+
+import json as _json
+def _js(arr):
+    return _json.dumps(arr, ensure_ascii=False)
+
+# Replace each chart's `new Chart(...)` block via regex
+_chart_replacers = [
+    ('areaCtx', f"""new Chart(areaCtx, {{
+  type: 'doughnut',
+  data: {{
+    labels: {_js(_area_labels)},
+    datasets: [{{ data: {_js(_area_data)}, backgroundColor: ['#c9a558','#e0bb73','#93c5fd','#a78bfa','#86efac','#fcd34d','#f472b6','#a8b8d0'] }}]
+  }},
+  options: {{ responsive: true, plugins: {{ legend: {{ position: 'right', labels: {{ color: '#cbd5e1', font: {{ size: 11 }} }} }} }} }}
+}});"""),
+    ('compCtx', f"""new Chart(compCtx, {{
+  type: 'bar',
+  data: {{
+    labels: {_js(_comp_labels)},
+    datasets: [{{ label: '件数', data: {_js(_comp_data)}, backgroundColor: '#c9a558', borderColor: '#e0bb73', borderWidth: 1, borderRadius: 4 }}]
+  }},
+  options: {{ responsive: true, scales: {{ y: {{ ticks: {{ color: '#a8b8d0' }}, grid: {{ color: 'rgba(201,165,88,0.08)' }} }}, x: {{ ticks: {{ color: '#a8b8d0' }}, grid: {{ display: false }} }} }}, plugins: {{ legend: {{ display: false }} }} }}
+}});"""),
+    ('siteCtx', f"""new Chart(siteCtx, {{
+  type: 'bar',
+  data: {{
+    labels: {_js(_site_labels)},
+    datasets: [{{ label: '件数', data: {_js(_site_data)}, backgroundColor: '#93c5fd', borderColor: '#bfdbfe', borderWidth: 1, borderRadius: 4 }}]
+  }},
+  options: {{ indexAxis: 'y', responsive: true, scales: {{ x: {{ ticks: {{ color: '#a8b8d0' }}, grid: {{ color: 'rgba(201,165,88,0.08)' }} }}, y: {{ ticks: {{ color: '#a8b8d0', font: {{ size: 10 }} }}, grid: {{ display: false }} }} }}, plugins: {{ legend: {{ display: false }} }} }}
+}});"""),
+]
+
+import re as _re
+for ctx_name, new_block in _chart_replacers:
+    pat = _re.compile(rf"new Chart\({ctx_name},\s*\{{[\s\S]*?\}}\)\s*;", _re.MULTILINE)
+    new_dashboard, n = pat.subn(new_block, dashboard, count=1)
+    if n:
+        dashboard = new_dashboard
+        print(f"Updated chart {ctx_name}")
+    else:
+        print(f"WARN: chart {ctx_name} pattern not found")
+
+# Remove catChart: drop its <canvas> wrapper card and JS block
+dashboard = _re.sub(
+    r'<div class="chart-card">\s*<h3>カテゴリ別 案件数</h3>\s*<canvas id="catChart"></canvas>\s*</div>',
+    '', dashboard)
+dashboard = _re.sub(
+    r"const catCtx = document\.getElementById\('catChart'\)\.getContext\('2d'\);\s*new Chart\(catCtx,\s*\{[\s\S]*?\}\)\s*;",
+    '', dashboard)
+print("Removed catChart card + JS")
 
 # ──────────────────────── Write outputs ────────────────────────
 with open(OUT_DASHBOARD, 'w') as f:

@@ -288,8 +288,8 @@ def scrape_seikatsu_kojo():
         if not title:
             continue
 
-        # Filter: only hospitalization trials (must contain 泊)
-        if '泊' not in title:
+        # Filter: include trials with 泊 (inpatient) OR 通院/通所/来院 (outpatient)
+        if '泊' not in title and '通院' not in title and '通所' not in title and '来院' not in title:
             continue
 
         # Compensation: try multiple patterns (with/without 総額約 prefix)
@@ -342,6 +342,23 @@ def scrape_seikatsu_kojo():
         # Price per night
         ppn = int(comp_num / total_nights) if total_nights > 0 and comp_num > 0 else 0
 
+        # Outpatient (通院/通所/来院) count from title
+        outpatient_count = 0
+        for m in re.finditer(r'通院\s*(\d+)\s*回?|(\d+)\s*通院\s*回?|通所\s*(\d+)\s*回?|来院\s*(\d+)\s*回?', title):
+            n = next((int(g) for g in m.groups() if g), 0)
+            outpatient_count += n
+        has_outpatient = outpatient_count > 0 or '通院' in title or '通所' in title or '来院' in title
+        has_inpatient = total_nights > 0
+        # trial_type_combined for display/filter
+        if has_inpatient and has_outpatient:
+            trial_type_combined = '入院+通院'
+        elif has_outpatient:
+            trial_type_combined = '通院のみ'
+        elif has_inpatient:
+            trial_type_combined = '入院のみ'
+        else:
+            trial_type_combined = '不明'
+
         # Recruiting status
         is_closed = '募集終了' in c and '募集中' not in c
 
@@ -356,12 +373,16 @@ def scrape_seikatsu_kojo():
             'nights': total_nights,
             'nights_desc': nights_desc,
             'total_nights': total_nights,
+            'outpatient_count': outpatient_count,
+            'has_outpatient': has_outpatient,
+            'has_inpatient': has_inpatient,
+            'trial_type_combined': trial_type_combined,
             'price_per_night': ppn,
             'capacity': None,
             'detail': '',
-            'trial_type': '入院',
+            'trial_type': trial_type_combined,
             'site': site_name,
-            'category': '入院',
+            'category': trial_type_combined,
             'source_sites': [site_name],
             'source_count': 1,
         })
@@ -431,6 +452,21 @@ def make_item(title, url, site, comp_num=0, total_nights=0, nights_desc=None, pr
     if prefecture is None:
         prefecture = extract_prefecture(title)
     ppn = int(comp_num / total_nights) if total_nights > 0 and comp_num > 0 else 0
+    # Outpatient extraction
+    outpatient_count = 0
+    for m in re.finditer(r'通院\s*(\d+)\s*回?|(\d+)\s*通院\s*回?|通所\s*(\d+)\s*回?|来院\s*(\d+)\s*回?', title or ''):
+        n = next((int(g) for g in m.groups() if g), 0)
+        outpatient_count += n
+    has_outpatient = outpatient_count > 0 or '通院' in (title or '') or '通所' in (title or '') or '来院' in (title or '')
+    has_inpatient = total_nights > 0
+    if has_inpatient and has_outpatient:
+        ttc = '入院+通院'
+    elif has_outpatient:
+        ttc = '通院のみ'
+    elif has_inpatient:
+        ttc = '入院のみ'
+    else:
+        ttc = '不明'
     return {
         'title': title,
         'url': url,
@@ -442,12 +478,16 @@ def make_item(title, url, site, comp_num=0, total_nights=0, nights_desc=None, pr
         'nights': total_nights,
         'nights_desc': nights_desc,
         'total_nights': total_nights,
+        'outpatient_count': outpatient_count,
+        'has_outpatient': has_outpatient,
+        'has_inpatient': has_inpatient,
+        'trial_type_combined': ttc,
         'price_per_night': ppn,
         'capacity': None,
         'detail': '',
-        'trial_type': '入院',
+        'trial_type': ttc,
         'site': site,
-        'category': '入院',
+        'category': ttc,
         'source_sites': [site],
         'source_count': 1,
     }
