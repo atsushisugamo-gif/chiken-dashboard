@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-05-08 17:04:33",
+  "updated_at": "2026-05-08 17:09:17",
   "total_count": 154,
   "errors": [],
   "filter": "入院",
@@ -579,7 +579,7 @@
       "area_raw": "不明",
       "compensation": "不明",
       "compensation_num": 0,
-      "scraped_start_date": "2026-06-30",
+      "scraped_start_date": "2026-05-08",
       "nights": 0,
       "nights_desc": null,
       "total_nights": 0,

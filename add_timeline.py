@@ -1621,7 +1621,7 @@ def _is_kanto(item):
     return any(k in text for k in keys)
 
 _kanto_items = [it for it in items if _is_kanto(it)]
-_kanto_items = sorted(_kanto_items, key=lambda x: x.get('_start_date') or date.today())
+_kanto_items = sorted(_kanto_items, key=lambda x: x.get('_start_date') or date(2099, 12, 31))
 
 _kanto_cards = []
 for _it in _kanto_items[:18]:
