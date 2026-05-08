@@ -103,6 +103,134 @@ print("Saved prev_data.json for next comparison")
 
 print(f"New: {new_count}, Updated: {updated_count}, Unchanged: {len(items)-new_count-updated_count}")
 
+# ──────────────────────── Location extraction (added) ────────────────────────
+_PREFS = ('北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+          '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+          '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
+          '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
+          '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+          '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
+          '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県')
+
+# District/locality → ward/city mapping for non-suffix area names
+_DISTRICT_TO_WARD = {
+    # 東京23区 popular districts → ward
+    '浅草': '台東区', '上野': '台東区',
+    '池袋': '豊島区', '巣鴨': '豊島区', '大塚': '豊島区',
+    '渋谷': '渋谷区', '原宿': '渋谷区', '恵比寿': '渋谷区',
+    '新宿': '新宿区', '神楽坂': '新宿区',
+    '銀座': '中央区', '日本橋': '中央区', '築地': '中央区',
+    '六本木': '港区', '赤坂': '港区', '青山': '港区', '麻布': '港区', '虎ノ門': '港区',
+    '品川': '品川区', '大崎': '品川区',
+    '秋葉原': '千代田区', '丸の内': '千代田区', '神田': '千代田区',
+    'みなとみらい': '横浜市', '元町': '横浜市',
+    '梅田': '大阪市', '心斎橋': '大阪市', '難波': '大阪市', '天王寺': '大阪市',
+    '祇園': '京都市', '河原町': '京都市',
+    '三宮': '神戸市',
+    'すすきの': '札幌市',
+    '栄': '名古屋市', '名駅': '名古屋市',
+    '博多': '福岡市', '天神': '福岡市',
+}
+
+_SHORT_TO_CITY = {
+    '横浜': '横浜市', '京都': '京都市', '神戸': '神戸市', '札幌': '札幌市',
+    '名古屋': '名古屋市', '仙台': '仙台市', '広島': '広島市', '奈良': '奈良市',
+    '熊本': '熊本市', '福岡': '福岡市', '大阪': '大阪市',
+}
+
+_REGION_BROAD = {
+    '都内': '東京都', '関東': '関東', '関西': '関西', '九州': '九州',
+}
+
+_NOISY_PREFIX_RE = re.compile(r'^[^一-龥]+')
+
+def _extract_location_from_text(text):
+    """Try multiple patterns to extract a city/ward/town/prefecture from arbitrary text."""
+    if not text:
+        return None
+    # 1) 都道府県+市区町村 combined → return city only
+    m = re.search(r'(?:北海道|[一-龥]{1,4}(?:都|府|県))([一-龥]{1,5}(?:市|区|町|村))', text)
+    if m:
+        return m.group(1)
+    # 2) Standalone 市区町村 — strip pref-name prefix from result if present
+    for m in re.finditer(r'([一-龥]{1,5})(市|区|町|村)', text):
+        prefix = m.group(1)
+        if not prefix:
+            continue
+        result = prefix + m.group(2)
+        stripped = _strip_pref_prefix(result)
+        if stripped and stripped != result and re.match(r'^[一-龥]{1,5}(?:市|区|町|村)$', stripped):
+            return stripped
+        return result
+    # 3) Known district name → ward
+    for k, v in _DISTRICT_TO_WARD.items():
+        if k in text:
+            return v
+    # 4) 都道府県 alone
+    for p in _PREFS:
+        if p in text:
+            return p
+    # 5) Short city keyword
+    for k, v in _SHORT_TO_CITY.items():
+        if k in text:
+            return v
+    # 6) Broad region (last resort)
+    for k, v in _REGION_BROAD.items():
+        if k in text:
+            return v
+    return None
+
+_SHORT_PREF_NAMES = ('東京', '大阪', '京都', '神奈川', '北海道', '兵庫', '愛知',
+                     '埼玉', '千葉', '福岡', '熊本', '奈良', '広島', '宮城', '静岡')
+
+def _strip_pref_prefix(s):
+    """Strip leading 都道府県 or short pref name, returning the city portion."""
+    if not s:
+        return s
+    for p in _PREFS:
+        if s.startswith(p):
+            return s[len(p):]
+    for sp in _SHORT_PREF_NAMES:
+        if s.startswith(sp):
+            return s[len(sp):]
+    return s
+
+def smart_location(item):
+    """Best-effort location for an item, prioritizing 市区町村 > 都道府県."""
+    pref = (item.get('prefecture') or '').strip()
+    title = item.get('title', '') or ''
+
+    if pref and pref != '不明':
+        # 1) Strip pref prefix to expose city (handles "神奈川横浜市" → "横浜市", "東京台東区" → "台東区")
+        stripped = _strip_pref_prefix(pref)
+        if stripped and stripped != pref:
+            m = re.match(r'^([一-龥]{1,5})(市|区|町|村)$', stripped)
+            if m:
+                return stripped
+
+        # 2) Find ANY 市区町村 in pref (handles noisy prefixes like "登場★港区")
+        # Take the LAST (most specific) match
+        matches = list(re.finditer(r'([一-龥]{1,5})(市|区|町|村)', pref))
+        if matches:
+            m = matches[-1]
+            return m.group(1) + m.group(2)
+
+        # 3) If pref is a clean 都道府県, try to upgrade with title
+        if pref in _PREFS:
+            ext = _extract_location_from_text(title)
+            if ext and ext not in _PREFS and ext != pref:
+                return ext
+            return pref
+
+        # 4) Strip noise and return
+        cleaned = _NOISY_PREFIX_RE.sub('', pref)
+        if cleaned:
+            return cleaned
+
+    # 5) No useful pref → extract from title
+    ext = _extract_location_from_text(title)
+    return ext or '不明'
+
 # ──────────────────────── Trial type helpers (added) ────────────────────────
 def extract_outpatient_count(title):
     """Extract total 通院/通所/来院 count from title (for backward compat)."""
@@ -221,6 +349,8 @@ def extract_date(title):
 
 for item in items:
     item['_start_date'] = extract_date(item['title'])
+    item['prefecture'] = smart_location(item)
+    item['area'] = item['prefecture']
 
 # Filter: keep only trials starting today or later (drop past + undated)
 _before_filter = len(items)
