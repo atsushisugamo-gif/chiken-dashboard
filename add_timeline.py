@@ -1023,7 +1023,8 @@ for _y, _mn in _months_set:
     _first_wd, _ndays = _monthrange(_y, _mn)
     # Python weekday: Mon=0..Sun=6. Sunday-start grid: leading = (Mon-based + 1) % 7
     _leading = (_first_wd + 1) % 7
-    _month_count = sum(1 for d in _by_date if d.year == _y and d.month == _mn)
+    _month_days = sum(1 for d in _by_date if d.year == _y and d.month == _mn)
+    _month_cases = sum(len(v) for d, v in _by_date.items() if d.year == _y and d.month == _mn)
     _cells = []
     for _ in range(_leading):
         _cells.append('<div class="tl-cal-day"></div>')
@@ -1046,7 +1047,7 @@ for _y, _mn in _months_set:
             _color = ' style="color:#fca5a5;"' if _is_sun else (' style="color:#7c8db5;"' if _is_sat else '')
             _cells.append(f'<div class="tl-cal-day{_today_cls}"{_color}><span class="cal-num">{_day}</span></div>')
     _heads = '<div class="tl-cal-head sun">日</div><div class="tl-cal-head">月</div><div class="tl-cal-head">火</div><div class="tl-cal-head">水</div><div class="tl-cal-head">木</div><div class="tl-cal-head">金</div><div class="tl-cal-head sat">土</div>'
-    _cal_blocks.append(f'<div class="tl-cal"><div class="tl-cal-title">{_y}年{_mn}月<span class="total">— {_month_count}日に予定</span></div><div class="tl-cal-grid">{_heads}{chr(10).join(_cells)}</div></div>')
+    _cal_blocks.append(f'<div class="tl-cal"><div class="tl-cal-title">{_y}年{_mn}月<span class="total">{_month_cases}件 ／ {_month_days}日に予定</span></div><div class="tl-cal-grid">{_heads}{chr(10).join(_cells)}</div></div>')
 
 _cal_html = '<div class="tl-cal-wrap">' + ''.join(_cal_blocks) + '</div>' if _cal_blocks else ''
 _cal_legend_html = '''<div class="tl-cal-legend">
