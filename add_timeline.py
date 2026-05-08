@@ -1078,8 +1078,10 @@ print("Added tracking JavaScript")
 
 # ──────────────────────── Regenerate mainTable from data.json ────────────────────────
 # Replace the existing mainTable tbody with fresh data
+# Default sort for 全件: compensation_num descending (highest reward first)
+_items_for_main = sorted(items, key=lambda x: -(x.get('compensation_num') or 0))
 main_rows = []
-for idx, item in enumerate(items, 1):
+for idx, item in enumerate(_items_for_main, 1):
     title_esc = esc(item.get('title', '')[:100])
     url = esc(item.get('url', ''))
     site = esc(item.get('site', ''))
