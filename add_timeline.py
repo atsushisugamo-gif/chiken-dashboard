@@ -352,10 +352,10 @@ for item in items:
     item['prefecture'] = smart_location(item)
     item['area'] = item['prefecture']
 
-# Filter: keep only trials starting today or later (drop past + undated)
+# Filter: drop past-dated trials only. Keep undated items (they're typically active recruits without explicit start dates).
 _before_filter = len(items)
-items = [it for it in items if it.get('_start_date') and it['_start_date'] >= TODAY]
-print(f"Date filter: {_before_filter} -> {len(items)} items (kept future-starting only)")
+items = [it for it in items if (not it.get('_start_date')) or it['_start_date'] >= TODAY]
+print(f"Date filter: {_before_filter} -> {len(items)} items (dropped past, kept future + undated)")
 
 # ──────────────────────── Build timeline data ────────────────────────
 timeline_items = []
@@ -1450,9 +1450,9 @@ _arch_html = """<div class="arch-section">
 </div>
 """
 
-# Inject architecture section right before </body>
-dashboard = dashboard.replace('</body>', _arch_html + '</body>', 1)
-print("Inserted architecture section")
+# Architecture diagram is now a separate file (architecture.html / architecture.png)
+# (intentionally NOT injecting into dashboard)
+print("Architecture: separate file (skipped dashboard injection)")
 
 # ──────────────────────── Write outputs ────────────────────────
 with open(OUT_DASHBOARD, 'w') as f:

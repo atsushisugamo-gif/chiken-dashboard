@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>治験ダッシュボード — 仕組み</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { font-family: -apple-system, 'Hiragino Mincho ProN', 'Yu Mincho', 'Yu Gothic', sans-serif; background: #050d1a; color: #f1e4c6; -webkit-font-smoothing: antialiased; }
+body { width: 1600px; height: 1000px; padding: 56px 80px; background: radial-gradient(ellipse at top, #102845 0%, #0a1c33 35%, #061325 70%, #030a18 100%); position: relative; overflow: hidden; }
+body::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, transparent, #c9a558 20%, #f1e4c6 50%, #c9a558 80%, transparent); }
+
+.header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; padding-bottom: 18px; border-bottom: 1px solid rgba(201,165,88,0.22); }
+.title { font-size: 36px; font-weight: 300; letter-spacing: 0.08em; background: linear-gradient(135deg, #f1e4c6 0%, #c9a558 50%, #f1e4c6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.subtitle { color: #93c5fd; font-size: 16px; letter-spacing: 0.1em; margin-top: 8px; opacity: 0.85; }
+.meta { color: #a8b8d0; font-size: 13px; text-align: right; line-height: 1.7; letter-spacing: 0.04em; }
+.meta .pipe { color: rgba(201,165,88,0.3); margin: 0 8px; }
+.meta .url { color: #c9a558; font-family: 'SF Mono', Menlo, monospace; font-size: 12px; }
+
+.intro { color: #cbd5e1; font-size: 16px; line-height: 1.85; margin-bottom: 36px; max-width: 1100px; }
+.intro strong { color: #f1e4c6; }
+.intro .gold { color: #c9a558; font-weight: 600; }
+
+.flow { display: flex; align-items: stretch; gap: 0; margin-bottom: 36px; }
+.step { flex: 1; background: linear-gradient(145deg, rgba(20,38,67,0.85), rgba(11,24,44,0.95)); border: 1px solid rgba(201,165,88,0.28); border-radius: 14px; padding: 22px 20px; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(201,165,88,0.15); display: flex; flex-direction: column; }
+.step.gold { background: linear-gradient(145deg, rgba(201,165,88,0.18), rgba(20,38,67,0.85)); border-color: #c9a558; }
+.step.blue { background: linear-gradient(145deg, rgba(147,197,253,0.15), rgba(20,38,67,0.85)); border-color: rgba(147,197,253,0.5); }
+.step::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #c9a558, transparent); }
+
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #c9a558, #8a6f30); color: #0a1c33; font-weight: 700; font-size: 18px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(201,165,88,0.4); }
+.step.blue .step-num { background: linear-gradient(135deg, #93c5fd, #3b82f6); color: #0a1c33; box-shadow: 0 4px 12px rgba(147,197,253,0.4); }
+
+.step-icon { font-size: 26px; margin-bottom: 8px; }
+.step-title { color: #f1e4c6; font-size: 15px; font-weight: 500; letter-spacing: 0.04em; margin-bottom: 8px; line-height: 1.4; }
+.step-desc { color: #a8b8d0; font-size: 11.5px; line-height: 1.6; flex: 1; letter-spacing: 0.01em; }
+.step-tag { color: #c9a558; font-size: 10px; letter-spacing: 0.1em; font-weight: 600; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(201,165,88,0.18); text-transform: uppercase; }
+
+.arrow { display: flex; align-items: center; justify-content: center; width: 50px; flex: 0 0 50px; color: #c9a558; font-size: 32px; }
+
+.endings { display: flex; gap: 24px; justify-content: center; margin-top: 8px; }
+.ending { background: linear-gradient(145deg, rgba(15,30,52,0.85), rgba(8,20,38,0.95)); border: 1px solid rgba(147,197,253,0.35); border-radius: 12px; padding: 18px 28px; display: flex; align-items: center; gap: 14px; min-width: 280px; }
+.ending-icon { font-size: 28px; }
+.ending-label { color: #f1e4c6; font-size: 16px; font-weight: 500; letter-spacing: 0.06em; }
+.ending-sub { color: #a8b8d0; font-size: 11px; margin-top: 2px; }
+
+.value-box { margin-top: 36px; background: linear-gradient(135deg, rgba(201,165,88,0.12), rgba(20,38,67,0.5)); border: 1px solid rgba(201,165,88,0.4); border-left: 4px solid #c9a558; border-radius: 8px; padding: 18px 24px; display: flex; gap: 24px; align-items: center; }
+.value-icon { font-size: 36px; }
+.value-text { color: #cbd5e1; font-size: 14px; line-height: 1.85; }
+.value-text strong { color: #c9a558; }
+.value-num { color: #f1e4c6; font-size: 18px; font-weight: 600; }
+
+.footer { position: absolute; bottom: 24px; left: 80px; right: 80px; display: flex; justify-content: space-between; color: #6b7c93; font-size: 11px; letter-spacing: 0.08em; padding-top: 14px; border-top: 1px solid rgba(201,165,88,0.12); }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="title">治験案件ダッシュボード</div>
+      <div class="subtitle">— 自動収集 × 自動公開のしくみ —</div>
+    </div>
+    <div class="meta">
+      毎週月曜  朝 9:00  自動実行<span class="pipe">|</span>10 サイト統合<br>
+      <span class="url">atsushisugamo-gif.github.io/chiken-dashboard/</span>
+    </div>
+  </div>
+
+  <div class="intro">
+    治験募集サイト <strong>10 社</strong>を毎週月曜の朝 9 時に<span class="gold">自動巡回</span>し、案件情報を集約・整形して、ブラウザで見やすい一覧ページを生成・公開します。<br>
+    <strong>あなたが行う作業はゼロ。</strong>更新が完了すると Slack に「📊 治験ダッシュボード更新しました」と URL が届きます。
+  </div>
+
+  <div class="flow">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-icon">📋</div>
+      <div class="step-title">10 サイトを巡回</div>
+      <div class="step-desc">生活向上WEB / JCVN / 治験ジャパン / ニューイング / ぺいるーと / 治験ネット / 治験バンク / 治験ウェブ / 治験情報V-NET / クリニカルボランティアサポート</div>
+      <div class="step-tag">DATA SOURCES</div>
+    </div>
+    <div class="arrow">▶</div>
+    <div class="step gold">
+      <div class="step-num">2</div>
+      <div class="step-icon">🤖</div>
+      <div class="step-title">スクレイパー</div>
+      <div class="step-desc">各案件ページから 案件名・開始日・報酬額・入院/通院回数 を抽出。重複や過去案件はこの段階で除外。</div>
+      <div class="step-tag">scraper.py</div>
+    </div>
+    <div class="arrow">▶</div>
+    <div class="step blue">
+      <div class="step-num">3</div>
+      <div class="step-icon">💾</div>
+      <div class="step-title">データ統合</div>
+      <div class="step-desc">サイトをまたぐ重複案件を1つにまとめ、地域名を整形（市区町村優先）、入院 / 通院を自動分類。</div>
+      <div class="step-tag">data.json</div>
+    </div>
+    <div class="arrow">▶</div>
+    <div class="step gold">
+      <div class="step-num">4</div>
+      <div class="step-icon">🎨</div>
+      <div class="step-title">ダッシュボード生成</div>
+      <div class="step-desc">関東特集セクション・タイムライン・グラフ・絞り込みタブをまとめて、見やすい一枚の HTML に組み立て。</div>
+      <div class="step-tag">add_timeline.py</div>
+    </div>
+    <div class="arrow">▶</div>
+    <div class="step blue">
+      <div class="step-num">5</div>
+      <div class="step-icon">🌐</div>
+      <div class="step-title">公開</div>
+      <div class="step-desc">GitHub Pages に自動アップロード。誰でも URL からアクセスして閲覧可能。HTTPS で安全。</div>
+      <div class="step-tag">GitHub Pages</div>
+    </div>
+  </div>
+
+  <div class="endings">
+    <div class="ending">
+      <div class="ending-icon">👀</div>
+      <div>
+        <div class="ending-label">ブラウザで閲覧</div>
+        <div class="ending-sub">PC / スマホ どこからでも</div>
+      </div>
+    </div>
+    <div class="ending">
+      <div class="ending-icon">📱</div>
+      <div>
+        <div class="ending-label">Slack で通知</div>
+        <div class="ending-sub">完了したら URL が届く</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="value-box">
+    <div class="value-icon">💡</div>
+    <div class="value-text">
+      <strong>このしくみの価値:</strong>  10 サイトを 1 件ずつ手作業で確認すると<span class="value-num"> 約30分</span>かかりますが、ここでは<span class="value-num"> 0分</span>。データの取得・集計・整形・公開はすべて自動。<strong>毎週同じ品質のレポートが届く</strong>から、案件の見落としがありません。
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>治験案件ダッシュボード — Architecture Overview</div>
+    <div>v1.0  ・  generated 2026</div>
+  </div>
+</body>
+</html>
