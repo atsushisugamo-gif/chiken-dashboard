@@ -1649,7 +1649,7 @@ _kanto_html = f"""<div class="kanto-featured">
   <div class="kanto-banner">
     <div>
       <h2>🌟 関東エリア特集</h2>
-      <div class="kanto-subtitle">Tokyo &amp; 横浜 — このダッシュボード最重要エリア</div>
+      
     </div>
     <div class="kanto-badge">全 {len(_kanto_items)} 件</div>
   </div>
