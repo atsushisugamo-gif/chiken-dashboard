@@ -2,7 +2,7 @@
 
 複数の治験サイトから「入院案件」を集約して、一覧・タイムライン表示する個人ダッシュボード。
 
-公開URL: GitHub Pages にデプロイ後 `https://<username>.github.io/<repo>/` で閲覧。
+公開URL: https://atsushisugamo-gif.github.io/chiken-dashboard/
 
 ## 構成
 
@@ -11,7 +11,7 @@ index.html                   # 公開ページ本体（自己完結HTML、デー
 dashboard.html               # index.html と同じ内容（バックアップ）
 data.json                    # スクレイピング結果（入院案件一覧）
 prev_data.json               # 差分検出用スナップショット（git管理外）
-scraper.py                   # サイト巡回スクレイパー（Phase 1: 生活向上WEB のみ完全対応）
+scraper.py                   # サイト巡回スクレイパー（全10サイト対応）
 add_timeline.py              # data.json から index.html を再生成
 collect_popularity.py        # 案件の人気度収集（補助）
 inject_popularity.py         # 人気度をdataに注入（補助）
@@ -34,7 +34,7 @@ credentials.json             # 実際の認証情報（git管理外）
 1. リポジトリの **Settings → Pages**
 2. Source: **Deploy from a branch**
 3. Branch: **main** / **/ (root)** を選択して **Save**
-4. 数十秒で `https://<username>.github.io/<repo>/` が公開される
+4. 数十秒で https://atsushisugamo-gif.github.io/chiken-dashboard/ が公開される
 
 ## 更新フロー
 
