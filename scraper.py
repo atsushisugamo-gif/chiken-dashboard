@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """
-治験入院案件スクレイパー（段階実装版）
+治験入院案件スクレイパー（全10サイト対応）
 
-Phase 1 (完成): 生活向上WEB
-Phase 2 (未実装): JCVN, ニューイング, 治験ジャパン, 治験情報V-NET, 治験ウェブ
-Phase 3 (未実装): ぺいるーと, 治験バンク, 治験ネット, クリニカルボランティアサポート
+対応サイト:
+  生活向上WEB, JCVN, ニューイング, 治験ジャパン, 治験情報V-NET,
+  治験ウェブ, ぺいるーと, 治験バンク, 治験ネット, クリニカルボランティアサポート
+
+ホスティング: GitHub Pages (https://atsushisugamo-gif.github.io/chiken-dashboard/)
+デプロイ方法: `git push` するだけで自動デプロイ
 
 外部ライブラリ不要（urllib, re のみ使用）
 出力: ユーザーフォルダの data.json
 
 新しいサイトを追加する場合:
-1. scrape_XXX() 関数を追加（現状の scrape_seikatsu_kojo() がお手本）
-2. SITE_SCRAPERS 辞書にエントリ追加
-3. main() で呼び出し
+1. scrape_XXX() 関数を追加（既存の scrape_seikatsu_kojo() などを参考）
+2. SITE_SCRAPERS リストにエントリ追加（True で実装済み扱い）
 """
 import urllib.request, urllib.error, re, html, json, os, unicodedata, sys, time
 from datetime import datetime
