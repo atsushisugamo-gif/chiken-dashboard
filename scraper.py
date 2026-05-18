@@ -338,13 +338,30 @@ def scrape_seikatsu_kojo():
         nights_desc = '+'.join(desc_parts) if len(desc_parts) > 1 else None
 
         # Prefecture / area
+        # 1) Try the detail page's 「実施場所」 field (most reliable):
+        #    <h2>実施場所</h2><p class="search_detail_content">[関東]東京都文京区</p>
         prefecture = '不明'
-        # Priority: 都道府県 > 市区町村
-        for pat in [r'(北海道|[^\s☆◆]{1,4}[都府県])', r'([^\s☆◆]{1,4}[市区町村])']:
-            pm = re.search(pat, title)
-            if pm:
-                prefecture = pm.group(1)
-                break
+        loc_raw = ''
+        loc_m = re.search(
+            r'<h2>\s*実施場所\s*</h2>\s*<p[^>]*search_detail_content[^>]*>\s*([^<]+?)\s*</p>',
+            c
+        )
+        if loc_m:
+            loc_text = html.unescape(loc_m.group(1)).strip()
+            # Strip leading [関東]/[関西]/etc region tag
+            loc_text = re.sub(r'^\[[^\]]+\]\s*', '', loc_text).strip()
+            loc_raw = loc_text
+            # Prefer 都道府県+市区町村 → city only is what dashboard expects,
+            # but storing the full string ("東京都文京区") is the most useful for downstream.
+            if loc_text:
+                prefecture = loc_text
+        # 2) Fallback: pattern-match from title (legacy behaviour)
+        if prefecture == '不明':
+            for pat in [r'(北海道|[^\s☆◆]{1,4}[都府県])', r'([^\s☆◆]{1,4}[市区町村])']:
+                pm = re.search(pat, title)
+                if pm:
+                    prefecture = pm.group(1)
+                    break
 
         # Price per night
         ppn = int(comp_num / total_nights) if total_nights > 0 and comp_num > 0 else 0
@@ -377,7 +394,7 @@ def scrape_seikatsu_kojo():
             'url': url,
             'prefecture': prefecture,
             'area': prefecture,
-            'area_raw': prefecture,
+            'area_raw': loc_raw or prefecture,
             'compensation': f'総額約{comp_num:,}円' if comp_num else '不明',
             'compensation_num': comp_num,
             'scraped_start_date': scraped_start_date,
@@ -482,6 +499,32 @@ def extract_nights_from_title(title):
 
 PREFECTURES_RE = r'(北海道|青森県|岩手県|宮城県|秋田県|山形県|福島県|茨城県|栃木県|群馬県|埼玉県|千葉県|東京都|神奈川県|新潟県|富山県|石川県|福井県|山梨県|長野県|岐阜県|静岡県|愛知県|三重県|滋賀県|京都府|大阪府|兵庫県|奈良県|和歌山県|鳥取県|島根県|岡山県|広島県|山口県|徳島県|香川県|愛媛県|高知県|福岡県|佐賀県|長崎県|熊本県|大分県|宮崎県|鹿児島県|沖縄県)'
 
+_REGION_KEYWORDS = ['北海道', '東北', '関東', '中部', '東海', '関西', '近畿', '北陸', '中国', '四国', '九州', '沖縄']
+
+def extract_location_from_body(body_html, patterns):
+    """Try a list of regex patterns against body_html and return the first cleaned location, or None.
+
+    Each pattern's first capturing group provides the raw location text. The returned
+    value is stripped of HTML tags, whitespace, and leading [region] brackets
+    (e.g. '[\u95a2\u6771]\u6771\u4eac\u90fd\u6587\u4eac\u533a' -> '\u6771\u4eac\u90fd\u6587\u4eac\u533a').
+    """
+    if not body_html or not patterns:
+        return None
+    for pat in patterns:
+        m = re.search(pat, body_html, re.S | re.I)
+        if not m:
+            continue
+        raw = m.group(1) if m.groups() else m.group(0)
+        text = re.sub(r'<[^>]+>', '', html.unescape(raw)).strip()
+        text = re.sub(r'^\[[^\]]+\]\s*', '', text).strip()
+        text = re.sub(r'\s+', ' ', text).strip()
+        if not text or text in ('指定の実施施設', '選択してください', '不明') or len(text) > 60:
+            continue
+        if text.count('(') >= 2 and re.search(r'\(\s*\d+\s*\)', text):
+            continue
+        return text
+    return None
+
 def extract_prefecture(text):
     """Extract prefecture/city from text (prefer full 都道府県)."""
     t = text or ''
@@ -499,6 +542,10 @@ def extract_prefecture(text):
     m = re.search(r'(?<![\w])([一-龥]{2,4}(?:市|区))(?![\w])', t)
     if m:
         return m.group(1)
+    # Region-level fallback (九州/関東/etc.) - last resort so we don't lose all info
+    for kw in _REGION_KEYWORDS:
+        if kw in t:
+            return kw + ('地方' if kw not in ('北海道', '沖縄') else '')
     return '不明'
 
 def make_item(title, url, site, comp_num=0, total_nights=0, nights_desc=None, prefecture=None, scraped_start_date=None):
@@ -548,7 +595,7 @@ def make_item(title, url, site, comp_num=0, total_nights=0, nights_desc=None, pr
     }
 
 def scrape_generic_site(site_name, index_url, detail_pattern, detail_prefix,
-                        amount_patterns=None, require_nights=True):
+                        amount_patterns=None, require_nights=True, location_patterns=None):
     """Generic scraper: fetch index, then each detail page, extract fields from title + body."""
     items = []
     try:
@@ -601,7 +648,10 @@ def scrape_generic_site(site_name, index_url, detail_pattern, detail_prefix,
                     break
 
         scraped_start_date = extract_date_from_body(c)
-        items.append(make_item(title, url, site_name, comp_num, total_nights, nights_desc, scraped_start_date=scraped_start_date))
+        # Prefer body-extracted location when site-specific patterns are provided
+        body_loc = extract_location_from_body(c, location_patterns) if location_patterns else None
+        items.append(make_item(title, url, site_name, comp_num, total_nights, nights_desc,
+                               prefecture=body_loc, scraped_start_date=scraped_start_date))
         if (i + 1) % 10 == 0:
             print(f"[{site_name}] Processed {i+1}/{len(paths)} ({len(items)} hospitalization)")
     
@@ -622,6 +672,11 @@ def scrape_newing():
         'ニューイング', 'https://new-ing.jp/',
         r'/recruited/\d+', 'https://new-ing.jp',
         amount_patterns=[r'([\d,]{5,})\s*円'],
+        location_patterns=[
+            # <th>実施医療機関<br>所在地</th><td><span>埼玉県</span></td>
+            r'実施医療機関.{0,30}?所在地\s*</th>\s*<td[^>]*>\s*<span[^>]*>([^<]+)</span>',
+            r'実施医療機関.{0,30}?所在地\s*</th>\s*<td[^>]*>([^<]+?)</td>',
+        ],
     )
 
 # ──────────────────────── 4) 治験ジャパン ────────────────────────
@@ -654,6 +709,10 @@ def scrape_paruit():
         'ぺいるーと', 'https://pa-ruit.jp/',
         r'/\d+-\d+[-\w]*-\d+/', 'https://pa-ruit.jp',
         amount_patterns=[r'謝礼\(総額\)[：:]\s*([\d,]+)\s*円'],
+        location_patterns=[
+            r'<h2>\s*実施場所\s*</h2>\s*</th>\s*<td[^>]*>\s*<p[^>]*>([^<]+)</p>',
+            r'実施場所\s*</h2>[^<]*</th>\s*<td[^>]*>([^<]+?)</td>',
+        ],
     )
 
 # ──────────────────────── 8) 治験バンク ────────────────────────
