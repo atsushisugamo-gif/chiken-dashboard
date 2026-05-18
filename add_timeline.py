@@ -30,6 +30,11 @@ def find_user_folder():
                         return os.path.join(mnt, e)
             except PermissionError:
                 continue
+    # 3) Fallback: if the script sits next to data.json / dashboard_hospitalization.html,
+    # treat the script directory as the data root. This covers GitHub Actions runners
+    # and local checkouts where the folder name differs.
+    if any(os.path.exists(os.path.join(script_dir, f)) for f in ('data.json', 'dashboard_hospitalization.html', 'scraper.py')):
+        return script_dir
     return None
 
 USER_FOLDER = find_user_folder()

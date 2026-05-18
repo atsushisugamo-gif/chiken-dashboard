@@ -40,6 +40,11 @@ def find_user_folder():
                         return os.path.join(mnt, e)
             except PermissionError:
                 continue
+    # Fallback: if the script sits next to data.json / credentials.json / scraper.py itself,
+    # assume the script directory is the data root. This covers GitHub Actions runners,
+    # CI environments, and local checkouts where the folder name differs.
+    if any(os.path.exists(os.path.join(script_dir, f)) for f in ('data.json', 'credentials.json', 'add_timeline.py')):
+        return script_dir
     return None
 
 # ──────────────────────── HTTP helper ────────────────────────
