@@ -18,3 +18,8 @@ Thumbs.db
 
 # --- Logs ---
 *.log
+
+# --- Orchestrator transient state ---
+state.json
+state.json.tmp
+prev_snapshot_backup.json
